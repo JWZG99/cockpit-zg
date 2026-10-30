@@ -32,7 +32,8 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "shortcutName": "Cockpit ZG"
+      "shortcutName": "Cockpit ZG",
+      "artifactName": "Cockpit-ZG-Setup-${version}.${ext}"
     },
     "publish": [
       {

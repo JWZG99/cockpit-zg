@@ -29,9 +29,10 @@ jobs:
         run: |
           ls -la dist
           VER=$(node -p "require('./package.json').version")
-          FILES=$(ls dist/*.exe dist/*.exe.blockmap dist/latest.yml)
+          shopt -s nullglob
+          FILES=(dist/*.exe dist/*.exe.blockmap dist/latest.yml)
           if gh release view "v$VER" >/dev/null 2>&1; then
-            gh release upload "v$VER" $FILES --clobber
+            gh release upload "v$VER" "${FILES[@]}" --clobber
           else
-            gh release create "v$VER" $FILES --title "Cockpit ZG $VER" --notes "Neue Version von Cockpit ZG." --target "$GITHUB_SHA"
+            gh release create "v$VER" "${FILES[@]}" --title "Cockpit ZG $VER" --notes "Neue Version von Cockpit ZG." --target "$GITHUB_SHA"
           fi
