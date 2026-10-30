@@ -1,0 +1,29 @@
+{
+  "name": "cockpit-zg",
+  "productName": "Cockpit ZG",
+  "version": "1.0.0",
+  "description": "Projekte, Aufgaben und Arbeitszeit von ZG als Windows-Programm",
+  "main": "main.js",
+  "author": "Zottele Gallicchio Architekten",
+  "private": true,
+  "scripts": {
+    "start": "python3 build/web-zu-app.py && electron .",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
+  "devDependencies": {
+    "electron": "44.3.0",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "ch.zg-architekten.cockpit",
+    "productName": "Cockpit ZG",
+    "files": ["main.js", "preload.js", "app/**/*", "package.json"],
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": true, "perMachine": false, "shortcutName": "Cockpit ZG" },
+    "publish": [{ "provider": "github", "owner": "JWZG99", "repo": "cockpit-zg" }]
+  }
+}
