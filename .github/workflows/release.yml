@@ -21,6 +21,17 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - run: python build/web-zu-app.py
-      - run: npm run release
+      - run: npm run dist
+      - name: Release veröffentlichen
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la dist
+          VER=$(node -p "require('./package.json').version")
+          FILES=$(ls dist/*.exe dist/*.exe.blockmap dist/latest.yml)
+          if gh release view "v$VER" >/dev/null 2>&1; then
+            gh release upload "v$VER" $FILES --clobber
+          else
+            gh release create "v$VER" $FILES --title "Cockpit ZG $VER" --notes "Neue Version von Cockpit ZG." --target "$GITHUB_SHA"
+          fi

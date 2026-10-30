@@ -8,8 +8,7 @@
   "private": true,
   "scripts": {
     "start": "python3 build/web-zu-app.py && electron .",
-    "dist": "electron-builder --win --publish never",
-    "release": "electron-builder --win --publish always"
+    "dist": "electron-builder --win --publish never"
   },
   "dependencies": {
     "electron-updater": "6.8.9"
