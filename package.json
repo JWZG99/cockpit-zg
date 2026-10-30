@@ -21,9 +21,27 @@
   "build": {
     "appId": "ch.zg-architekten.cockpit",
     "productName": "Cockpit ZG",
-    "files": ["main.js", "preload.js", "app/**/*", "package.json"],
-    "win": { "target": "nsis" },
-    "nsis": { "oneClick": true, "perMachine": false, "shortcutName": "Cockpit ZG" },
-    "publish": [{ "provider": "github", "owner": "JWZG99", "repo": "cockpit-zg" }]
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "Cockpit ZG"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "JWZG99",
+        "repo": "cockpit-zg",
+        "releaseType": "release"
+      }
+    ]
   }
 }

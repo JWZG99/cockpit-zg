@@ -20,7 +20,6 @@ Programme und Skripte in verknüpften Pfaden werden nie gestartet, nur im Explor
 
 ## Neue Version veröffentlichen
 
-1. Die Version in `package.json` erhöhen.
-2. Ein Tag `vX.Y.Z` pushen.
-3. GitHub Actions baut den Windows-Installer und legt ihn als Release ab.
+1. Die Version in `package.json` erhöhen und auf `main` pushen.
+2. GitHub Actions baut den Windows-Installer und legt ihn als Release `vX.Y.Z` ab.
 4. Das installierte Programm findet das Update beim nächsten Start selbst.

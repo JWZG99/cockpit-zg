@@ -1,9 +1,10 @@
-# Builds the Windows installer whenever a version tag (v1.2.3) is pushed and publishes it as a GitHub release;
-# the installed program finds the release and updates itself.
+# Builds the Windows installer whenever the version in package.json changes on main and publishes it as a
+# GitHub release (tag vX.Y.Z); the installed program finds the release and updates itself.
 name: Windows-Version bauen
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+    paths: ['package.json']
   workflow_dispatch:
 permissions:
   contents: write
