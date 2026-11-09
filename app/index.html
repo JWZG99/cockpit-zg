@@ -148,6 +148,24 @@ h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter
 .empty { color: var(--muted); margin: 0; }
 .datafoot { margin: 0 4px; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .datafoot .btn { font-size: 13px; padding: 4px 8px; }
+.datafoot .dst { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; margin-right: 6px; }
+.datafoot .dst::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--good, #34c759); }
+.datafoot .dst.off { color: var(--bad-text, #c0392b); } .datafoot .dst.off::before { background: #ff3b30; }
+.facts .ordn { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.facts .ordn .vl { font-size: 13px; color: var(--muted); }
+.facts .ordn button { font: inherit; font-weight: 600; color: var(--accent, #0a84ff); background: none; border: 0; padding: 0; cursor: pointer; text-align: right; overflow-wrap: anywhere; }
+.pathrow { display: flex; gap: 8px; } .pathrow input { flex: 1; min-width: 0; }
+#pordner { max-width: 1000px; margin: 18px 0 0; }
+#pordner h3 { margin: 0 4px 8px; font-size: 17px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+#pordner .pfad { font-size: 13px; font-weight: 400; color: var(--muted); overflow-wrap: anywhere; }
+#pordner .flist { background: var(--card, #fff); border-radius: 14px; overflow: hidden; }
+#pordner .fit { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; width: 100%; padding: 9px 14px; border: 0; border-top: 1px solid var(--line, rgba(0,0,0,.08)); background: none; font: inherit; font-size: 15px; text-align: left; cursor: pointer; color: inherit; }
+#pordner .fit:first-child { border-top: 0; }
+#pordner .fit:hover { background: var(--fill); }
+#pordner .fit .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pordner .fit .m { font-size: 13px; color: var(--muted); white-space: nowrap; }
+#pordner .leer { padding: 14px; color: var(--muted); font-size: 14px; }
+
 .grid.movable .card-head { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .card.dragging { position: relative; z-index: 5; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22); pointer-events: none; }
 .card.dragging .card-head { cursor: grabbing; }
@@ -867,7 +885,11 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
       <p class="cal-nodate" id="calNoDate"></p>
     </div>
   </section>
-  <p class="datafoot" id="dataFoot" hidden>Daten: <span id="dataDir"></span> <button type="button" class="btn ghost" id="dataDirBtn">Ordner ändern …</button></p>
+  <section id="pordner" hidden aria-labelledby="pordnerH">
+    <h3 id="pordnerH"><span>Projektordner</span><span class="pfad" id="pordnerPfad"></span><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
+    <div class="flist" id="pordnerList"></div>
+  </section>
+  <p class="datafoot" id="dataFoot" hidden><span class="dst" id="dataSt"></span>Daten: <span id="dataDir"></span> <button type="button" class="btn ghost" id="dataDirBtn">Ordner ändern …</button></p>
 </div>
 </div>
 
@@ -967,6 +989,7 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     </div>
     <div class="field"><span class="flabel" id="fFarbeLbl">Farbe</span><div class="swatches" id="fFarbe" role="radiogroup" aria-labelledby="fFarbeLbl"></div></div>
     <div class="field"><label for="fVerant">Verantwortlich</label><input id="fVerant" placeholder="z. B. Name der Projektleitung"></div>
+    <div class="field"><label for="fOrdner">Projektordner auf dem Server</label><div class="pathrow"><input id="fOrdner" placeholder="z. B. G:\Projekte\HOL"><button type="button" class="btn" id="fOrdnerPick" hidden>Wählen …</button></div></div>
     <div class="err" id="pErr" aria-live="polite"></div>
     <button type="button" class="btn danger" id="pDelete">Projekt löschen</button>
   </div>
@@ -1288,6 +1311,11 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     const vr = el('div', 'verant' + (p.verantwortlich ? '' : ' leer'));
     vr.append(el('span', 'vl', 'Verantwortlich'), el('span', 'vn', p.verantwortlich || 'noch nicht erfasst'));
     facts.append(vr);
+    if (p.ordner && window.native) {
+      const od = el('div', 'ordn'); const ob = el('button', '', 'Projektordner öffnen'); ob.type = 'button'; ob.title = p.ordner;
+      ob.addEventListener('click', async (e) => { e.stopPropagation(); const r = await window.native.openPath(p.ordner); if (!r.ok) alert(r.error || 'Ordner nicht gefunden.'); });
+      od.append(el('span', 'vl', 'Ordner'), ob); facts.append(od);
+    }
     c.append(facts);
 
     const tl = el('div', 'tasks');
@@ -1665,7 +1693,7 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
 
   /* ---------- Bearbeiten ---------- */
   let editing = null, armed = false;
-  const F = { code: $('fCode'), titel: $('fTitel'), phase: $('fPhase'), status: $('fStatus'), verant: $('fVerant') };
+  const F = { code: $('fCode'), titel: $('fTitel'), phase: $('fPhase'), status: $('fStatus'), verant: $('fVerant'), ordner: $('fOrdner') };
   let pFarbe = '';
   const drawSwatches = () => {
     const box = $('fFarbe'); box.replaceChildren();
@@ -1689,6 +1717,7 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     F.phase.value = p?.phase || '';
     F.status.value = p?.status || '';
     F.verant.value = p?.verantwortlich || '';
+    F.ordner.value = p?.ordner || '';
     $('scrim').hidden = false;
     (p ? F.titel : F.code).focus();
   };
@@ -1699,7 +1728,7 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
   $('pSave').addEventListener('click', async () => {
     const code = F.code.value.trim();
     if (!code) { $('pErr').textContent = 'Gib ein Kürzel ein, z. B. HOL.'; return; }
-    const data = { name: code, titel: F.titel.value.trim(), phase: F.phase.value, status: F.status.value, verantwortlich: F.verant.value.trim(), farbe: pFarbe };
+    const data = { name: code, titel: F.titel.value.trim(), phase: F.phase.value, status: F.status.value, verantwortlich: F.verant.value.trim(), ordner: F.ordner.value.trim().replace(/^"(.*)"$/, '$1'), farbe: pFarbe };
     $('pSave').disabled = true;
     try {
       if (editing) await db.doc('projekte/' + editing.id).update(data);
@@ -3552,6 +3581,7 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     $('sideProjH').hidden = !projects.length;
     document.querySelectorAll('#side .side-it').forEach((x) => x.setAttribute('aria-current', x.dataset.pg === page ? 'page' : 'false'));
     $('sideZeit').textContent = $('dec').textContent !== '–' ? $('dec').textContent + ' h' : '';
+    if (focusP && !$('pordner').hidden !== !!(projects.find((x) => x.id === focusP) || {}).ordner) showOrdner();
     if (focusP) { const p = projects.find((x) => x.id === focusP); if (p) { $('projTitle').replaceChildren(document.createTextNode(p.name || p.id)); if (p.titel) $('projTitle').append(el('span', 'proj-sub', p.titel)); } }
   };
   const setPage = (pg) => {
@@ -3568,9 +3598,37 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
       $('projTitle').textContent = 'Projekte';
       if (wasP) { let v = 'karten'; try { v = localStorage.getItem(VK) || 'karten'; } catch (_) {} setView(v); }
     }
-    render(); renderTime();
+    render(); renderTime(); showOrdner();
     window.scrollTo({ top: 0 });
   };
+  // Projektordner auf dem Server (nur im Programm)
+  let odPfad = null;
+  const fmtGr = (b) => b >= 1e6 ? (b / 1e6).toFixed(1).replace('.', ',') + ' MB' : b >= 1e3 ? Math.round(b / 1e3) + ' kB' : b + ' B';
+  async function showOrdner(sub) {
+    const sec = $('pordner'); const p = focusP && projects.find((x) => x.id === focusP);
+    if (!window.native || !window.native.listDir || !p || !p.ordner) { sec.hidden = true; odPfad = null; return; }
+    sec.hidden = false;
+    const root = p.ordner; odPfad = sub || (odPfad && odPfad.startsWith(root) ? odPfad : root);
+    $('pordnerPfad').textContent = odPfad;
+    $('pordnerUp').hidden = odPfad === root;
+    const box = $('pordnerList');
+    const r = await window.native.listDir(odPfad);
+    box.replaceChildren();
+    if (!r.ok) { box.append(el('div', 'leer', r.error)); return; }
+    if (!r.items.length) { box.append(el('div', 'leer', 'Der Ordner ist leer.')); return; }
+    r.items.forEach((f) => {
+      const b = el('button', 'fit'); b.type = 'button'; b.title = f.path;
+      b.append(el('span', '', f.ordner ? '📁' : '📄'), el('span', 'n', f.name), el('span', 'm', f.ordner ? '' : fmtGr(f.groesse)), el('span', 'm', f.geaendert ? new Date(f.geaendert).toLocaleDateString('de-CH') : ''));
+      b.addEventListener('click', async () => { if (f.ordner) showOrdner(f.path); else { const x = await window.native.openPath(f.path); if (!x.ok) alert(x.error); } });
+      box.append(b);
+    });
+  }
+  $('pordnerUp').addEventListener('click', () => { const i = odPfad.replace(/[\\/]+$/, '').search(/[\\/][^\\/]*$/); if (i > 0) showOrdner(odPfad.slice(0, i)); });
+  $('pordnerOpen').addEventListener('click', () => odPfad && window.native.openPath(odPfad));
+  if (window.native && window.native.pickPath) {
+    $('fOrdnerPick').hidden = false;
+    $('fOrdnerPick').addEventListener('click', async () => { const r = await window.native.pickPath('ordner'); if (r && r[0]) F.ordner.value = r[0]; });
+  }
   $('side').addEventListener('click', (e) => { const b = e.target.closest('.side-it'); if (b) setPage(b.dataset.pg); });
 
   // Profil: privat pro Person gespeichert (data/users/<id>/profil)
@@ -3623,6 +3681,13 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     const showDir = async () => { $('dataDir').textContent = await window.native.dataDir(); };
     const pickDir = async () => { await window.native.chooseDataDir(); showDir(); };
     $('dataFoot').hidden = false; showDir();
+    const showSt = (st) => {
+      if (!st) return;
+      const x = $('dataSt'); x.classList.toggle('off', !st.online);
+      x.textContent = st.online ? 'Server verbunden' : 'Server nicht erreichbar · lokale Kopie' + (st.ausstehend ? ' · ' + st.ausstehend + ' Änderungen warten' : '');
+      $('dataDir').textContent = st.dir;
+    };
+    if (window.native.dataStatus) { window.native.dataStatus().then(showSt); window.native.onDataStatus(showSt); }
     $('dataDirBtn').addEventListener('click', pickDir);
     window.native.onAskDataDir(pickDir);
   }

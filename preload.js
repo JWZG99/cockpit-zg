@@ -12,5 +12,8 @@ contextBridge.exposeInMainWorld('native', {
   pickPath: (kind) => ipcRenderer.invoke('pick-path', kind),
   dataDir: () => ipcRenderer.invoke('data-dir'),
   chooseDataDir: () => ipcRenderer.invoke('choose-data-dir'),
+  dataStatus: () => ipcRenderer.invoke('data-status'),
+  onDataStatus: (cb) => ipcRenderer.on('data-status', (_e, st) => cb(st)),
+  listDir: (p) => ipcRenderer.invoke('list-dir', p),
   onAskDataDir: (cb) => ipcRenderer.on('ask-data-dir', () => cb()),
 });
