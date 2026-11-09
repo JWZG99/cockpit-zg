@@ -673,15 +673,82 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
 .tk-note { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .de-split { font-size: 13px; white-space: pre-line; }
 .de-split:empty { display: none; }
+/* Seitenleiste links (ZG, 9.11.): Profil oben, Zeiterfassung, dann eine Seite pro Projekt */
+.shell { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+.side { position: sticky; top: 0; height: 100vh; overflow-y: auto; box-sizing: border-box; padding: 18px 12px 24px; display: flex; flex-direction: column; gap: 4px; background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: inset -0.5px 0 0 var(--line); z-index: 6; }
+.side-it { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 15px; text-align: left; padding: 8px 10px; min-height: 44px; border-radius: 12px; cursor: pointer; }
+.side-it:hover { background: var(--fill); }
+.side-it[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.side-it .ic { width: 28px; height: 28px; display: grid; place-items: center; color: var(--accent); }
+.side-it .lb { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-it .nm { font-size: 12px; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.side-prof { grid-template-columns: 40px minmax(0, 1fr); padding: 8px; margin-bottom: 10px; }
+.side-prof .av { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
+.side-prof .who { display: flex; flex-direction: column; min-width: 0; }
+.side-prof .who b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-prof .who span { font-size: 12px; color: var(--muted); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-h { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 16px 10px 4px; }
+.side-it .pdot { width: 12px; height: 12px; border-radius: 4px; background: var(--pc, var(--idle)); justify-self: center; }
+@media (max-width: 760px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; flex-direction: row; overflow-x: auto; padding: 8px; gap: 4px; box-shadow: inset 0 -0.5px 0 var(--line); }
+  .side-it { width: auto; flex: none; grid-template-columns: 24px auto; }
+  .side-it .nm, .side-h, .side-prof .who span { display: none; }
+  .side-prof { margin: 0; grid-template-columns: 32px auto; }
+  .side-prof .av { width: 32px; height: 32px; font-size: 13px; }
+}
+/* Seiten */
+body.pg-profil #heuteRow, body.pg-profil #projekte, body.pg-zeit #projekte, body.pg-projekt #heuteRow, body.pg-zeit #tagkarte { display: none !important; }
+body:not(.pg-profil) #profil { display: none !important; }
+body.pg-zeit .heute-row { grid-template-columns: minmax(0, 1fr); }
+body.pg-zeit #heuteBody, body.pg-zeit #tView, body.pg-zeit #wView { display: flex !important; }
+body.pg-zeit #heuteBody { display: block !important; }
+body.pg-zeit #heuteToggle .chev, body.pg-zeit .ttabs { display: none; }
+body.pg-zeit #tView { order: 1; }
+body.pg-zeit #wView { order: 2; border-top: 0.5px solid var(--line); padding-top: 18px; margin-top: 6px; }
+body.pg-zeit #heuteToggle { pointer-events: none; }
+body.pg-projekt #projekte .filters { display: none; }
+body.pg-projekt .grid { grid-template-columns: minmax(0, 1fr); max-width: 1000px; }
+body.pg-projekt .grid .card .code { font-size: 34px; }
+.proj-sub { font-size: 15px; color: var(--muted); font-weight: 400; margin-left: 10px; }
+.prof { border-radius: var(--radius); padding: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 760px; background-color: var(--glass-strong); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--glass-edge), var(--glass-shadow); }
+.prof-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; }
+.prof-head .av { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 24px; }
+.prof-head b { font-size: 22px; display: block; }
+.prof-head span { color: var(--muted); font-size: 15px; }
+@media (max-width: 560px) { .prof { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
+<div class="shell">
+<nav class="side" id="side" aria-label="Bereiche">
+  <button type="button" class="side-it side-prof" data-pg="profil" id="sideProf"><span class="av" id="sideAv">ZG</span><span class="who"><b id="sideName">Profil</b><span id="sideRolle">Mitarbeiter</span></span></button>
+  <button type="button" class="side-it" data-pg="home"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Übersicht</span></button>
+  <button type="button" class="side-it" data-pg="zeit"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Zeiterfassung</span><span class="nm" id="sideZeit"></span></button>
+  <div class="side-h" id="sideProjH">Projekte</div>
+  <div id="sideProj"></div>
+</nav>
 <div class="wrap">
   <header class="top">
     <div><div class="eyebrow" id="today"></div><h1>Cockpit ZG</h1></div>
     <div class="clock" id="clock">--:--</div>
   </header>
 
-  <div class="heute-row">
+  <section id="profil" aria-labelledby="profTitle">
+    <div class="sec-head"><h2 id="profTitle">Profil</h2><span class="hint" id="profSaved"></span></div>
+    <div class="prof">
+      <div class="prof-head"><span class="av" id="profAv">ZG</span><div><b id="profShow">Mitarbeiter</b><span id="profShow2">Name und Kürzel eintragen</span></div></div>
+      <div class="field"><label for="prName">Name</label><input id="prName" autocomplete="name" placeholder="Vorname Nachname"></div>
+      <div class="field"><label for="prKurz">Kürzel</label><input id="prKurz" maxlength="6" placeholder="z. B. JW"></div>
+      <div class="field"><label for="prRolle">Funktion</label><input id="prRolle" placeholder="z. B. Projektleiter"></div>
+      <div class="field"><label for="prFirma">Büro</label><input id="prFirma" placeholder="Zottele Gallicchio Architekten"></div>
+      <div class="field"><label for="prMail">E-Mail</label><input id="prMail" type="email" autocomplete="email"></div>
+      <div class="field"><label for="prTel">Telefon</label><input id="prTel" type="tel" autocomplete="tel"></div>
+      <div class="field"><label for="prSoll">Soll pro Tag (h)</label><input id="prSoll" type="number" min="0" max="14" step="0.1"><span class="help">Gleich wie «Soll» in der Zeiterfassung</span></div>
+      <div class="field"><label for="prPensum">Pensum (%)</label><input id="prPensum" type="number" min="0" max="100" step="5" placeholder="100"></div>
+    </div>
+  </section>
+
+  <div class="heute-row" id="heuteRow">
   <section id="heute">
     <div class="sec-head"><h2><button type="button" class="sec-toggle" id="heuteToggle" aria-expanded="true" aria-controls="heuteBody"><svg class="chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Arbeitszeit heute</button></h2><span><span class="heute-sum" id="heuteSum"></span><span class="hint" id="saved"></span></span></div>
     <div id="heuteBody">
@@ -751,7 +818,7 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
 
   <section id="projekte">
     <div class="sec-head">
-      <h2>Projekte</h2>
+      <h2 id="projTitle">Projekte</h2>
       <div class="filters" role="group" aria-label="Darstellung">
         <button type="button" class="chip" data-v="karten" aria-pressed="true">Karten</button>
         <button type="button" class="chip" data-v="mindmap" aria-pressed="false">Mindmap</button>
@@ -792,6 +859,7 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
     </div>
   </section>
   <p class="datafoot" id="dataFoot" hidden>Daten: <span id="dataDir"></span> <button type="button" class="btn ghost" id="dataDirBtn">Ordner ändern …</button></p>
+</div>
 </div>
 
 <div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button type="button" id="toastUndo">Widerrufen</button></div>
@@ -1023,6 +1091,7 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
     r.className = 'v ' + (rest > 0 ? 'warn' : 'ok');
     $('bar').classList.toggle('done', rest <= 0);
     $('bar').firstElementChild.style.width = (so > 0 ? Math.min(1, netto / so) * 100 : 0).toFixed(1) + '%';
+    if ($('sideZeit')) $('sideZeit').textContent = $('dec').textContent + ' h';
     $('heuteSum').textContent = $('heuteBody').hidden ? $('dec').textContent + ' h · Feierabend ' + $('feierabend').textContent : '';
   };
 
@@ -1511,18 +1580,20 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
   };
 
   const render = () => {
+    try { renderSide(); } catch (_) {}
     if (view === 'mindmap') { renderMindmap(); return; }
     if (view === 'kalender') { renderCal(); return; }
     if (cardDrag) { gridPending = true; return; }
     const g = $('grid');
-    g.classList.toggle('movable', canWrite && loaded);
+    g.classList.toggle('movable', canWrite && loaded && !focusP);
     const keepFocus = document.activeElement && document.activeElement.id && g.contains(document.activeElement) ? { id: document.activeElement.id, v: document.activeElement.value } : null;
     const drafts = {};
     g.querySelectorAll('.add input').forEach((i) => { if (i.value) drafts[i.id] = i.value; });
     g.replaceChildren();
     if (!loaded) { g.append(el('p', 'empty', db === false ? 'Projekte sind hier nicht verfügbar. Öffne das Cockpit angemeldet in claude.ai.' : 'Projekte werden geladen …')); return; }
-    projects.forEach((p) => g.append(card(p)));
-    if (canWrite) {
+    (focusP ? projects.filter((p) => p.id === focusP) : projects).forEach((p) => g.append(card(p)));
+    if (focusP && !projects.some((p) => p.id === focusP)) { setPage('home'); return; }
+    if (canWrite && !focusP) {
       const n = el('button', 'newcard', '+ Neues Projekt'); n.type = 'button';
       n.addEventListener('click', () => openPanel(null));
       g.append(n);
@@ -3451,6 +3522,79 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
     render();
     if (view === 'mindmap' && loaded) fit();
   };
+
+  /* ---------- Seiten (Leiste links) ---------- */
+  const PK = 'cockpit-zg-seite';
+  let page = 'home', focusP = null;
+  const initials = (pr) => (pr.kuerzel || (pr.name || '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 3) || 'ZG').toUpperCase();
+  let profil = {};
+  const renderSide = () => {
+    const box = $('sideProj'); if (!box) return;
+    box.replaceChildren();
+    projects.forEach((p) => {
+      const b = el('button', 'side-it'); b.type = 'button'; b.dataset.pg = 'p:' + p.id;
+      const c = farbeOf(p); const d = el('span', 'pdot'); if (c) d.style.setProperty('--pc', c);
+      const n = tasks.filter((t) => t.projekt === p.id && !t.erledigt).length;
+      b.append(d, el('span', 'lb', p.name || p.id), el('span', 'nm', n ? String(n) : ''));
+      b.title = (p.name || p.id) + (p.titel ? ' · ' + p.titel : '') + (n ? ' · ' + n + ' offen' : '');
+      box.append(b);
+    });
+    $('sideProjH').hidden = !projects.length;
+    document.querySelectorAll('#side .side-it').forEach((x) => x.setAttribute('aria-current', x.dataset.pg === page ? 'page' : 'false'));
+    $('sideZeit').textContent = $('dec').textContent !== '–' ? $('dec').textContent + ' h' : '';
+    if (focusP) { const p = projects.find((x) => x.id === focusP); if (p) { $('projTitle').replaceChildren(document.createTextNode(p.name || p.id)); if (p.titel) $('projTitle').append(el('span', 'proj-sub', p.titel)); } }
+  };
+  const setPage = (pg) => {
+    const wasP = !!focusP;
+    page = pg || 'home';
+    focusP = page.startsWith('p:') ? page.slice(2) : null;
+    document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt');
+    document.body.classList.add(focusP ? 'pg-projekt' : 'pg-' + page);
+    try { localStorage.setItem(PK, page); } catch (_) {}
+    if (focusP) {
+      // a project page always shows that project as a card
+      view = 'karten'; $('grid').hidden = false; mm.hidden = true; $('cal').hidden = true;
+    } else {
+      $('projTitle').textContent = 'Projekte';
+      if (wasP) { let v = 'karten'; try { v = localStorage.getItem(VK) || 'karten'; } catch (_) {} setView(v); }
+    }
+    render(); renderTime();
+    window.scrollTo({ top: 0 });
+  };
+  $('side').addEventListener('click', (e) => { const b = e.target.closest('.side-it'); if (b) setPage(b.dataset.pg); });
+
+  // Profil: privat pro Person gespeichert (data/users/<id>/profil)
+  let profRef = null, profT = null;
+  const PR = { name: $('prName'), kuerzel: $('prKurz'), rolle: $('prRolle'), firma: $('prFirma'), mail: $('prMail'), tel: $('prTel'), pensum: $('prPensum') };
+  const showProfil = () => {
+    const ini = initials(profil);
+    $('sideAv').textContent = ini; $('profAv').textContent = ini;
+    $('sideName').textContent = profil.name || 'Profil';
+    $('sideRolle').textContent = profil.rolle || 'Mitarbeiter';
+    $('profShow').textContent = profil.name || 'Mitarbeiter';
+    $('profShow2').textContent = [profil.rolle, profil.firma].filter(Boolean).join(' · ') || 'Name und Kürzel eintragen';
+  };
+  const applyProfil = (v) => {
+    profil = v || {};
+    Object.entries(PR).forEach(([k, e]) => { if (document.activeElement !== e) e.value = profil[k] != null ? profil[k] : ''; });
+    if (document.activeElement !== $('prSoll')) $('prSoll').value = soll.value;
+    showProfil();
+  };
+  const saveProfil = () => {
+    Object.entries(PR).forEach(([k, e]) => { profil[k] = e.type === 'number' ? (e.value === '' ? '' : num(e, 0)) : e.value.trim(); });
+    showProfil();
+    clearTimeout(profT);
+    profT = setTimeout(() => {
+      try { localStorage.setItem('cockpit-zg-profil', JSON.stringify(profil)); } catch (_) {}
+      if (!profRef) { $('profSaved').textContent = 'Auf diesem Gerät gespeichert'; return; }
+      profRef.set({ ...profil, gespeichert: new Date().toISOString() }).then(() => { $('profSaved').textContent = 'Gespeichert um ' + nowHM(); }).catch(() => { $('profSaved').textContent = 'Speichern hat nicht geklappt'; });
+    }, 600);
+  };
+  Object.values(PR).forEach((e) => e.addEventListener('input', saveProfil));
+  $('prSoll').addEventListener('input', () => { soll.value = $('prSoll').value; timeChanged(); });
+  soll.addEventListener('input', () => { if (document.activeElement !== $('prSoll')) $('prSoll').value = soll.value; });
+  try { applyProfil(JSON.parse(localStorage.getItem('cockpit-zg-profil') || 'null')); } catch (_) { applyProfil({}); }
+  window.setProfilRef = (ref) => { profRef = ref; ref.onSnapshot((snap) => { if (snap.exists) applyProfil(snap.data()); }, () => { profRef = null; }); };
   // fit again whenever the box changes size (window resized, layout shifts)
   if (window.ResizeObserver) { let rw = 0, rh = 0; new ResizeObserver(([en]) => { const { width, height } = en.contentRect; if (width && (Math.abs(width - rw) > 1 || Math.abs(height - rh) > 1)) { rw = width; rh = height; if (view === 'mindmap') fit(); } }).observe(mm); }
   document.querySelectorAll('.chip[data-v]').forEach((c) => c.addEventListener('click', () => {
@@ -3458,6 +3602,7 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
     if (view === 'mindmap') { const r = mm.getBoundingClientRect(); if (r.bottom > window.innerHeight || r.top < 0) $('projekte').scrollIntoView({ block: 'start', behavior: 'smooth' }); }
   }));
   try { const v = localStorage.getItem(VK); if (v === 'mindmap' || v === 'kalender') setView(v); } catch (_) {}
+  try { const pg = localStorage.getItem(PK); setPage(pg && pg !== 'profil' && pg !== 'zeit' && !pg.startsWith('p:') ? 'home' : pg || 'home'); } catch (_) { setPage('home'); }
 
   // A short tick on touch, where the device supports it
   document.addEventListener('pointerdown', (e) => {
@@ -3499,6 +3644,7 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
     const id = user ? await user.id() : null;
     if (!id) return;
     timeRef = db.collection('data/users/' + id).doc('rechner');
+    window.setProfilRef(db.collection('data/users/' + id).doc('profil'));
     tageRef = db.collection('data/users/' + id + '/zeit/tage');
     tageRef.orderBy('datum', 'desc').limit(31).onSnapshot((snap) => {
       tage = {};
