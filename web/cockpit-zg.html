@@ -760,6 +760,41 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
 .prof-head b { font-size: 22px; display: block; }
 .prof-head span { color: var(--muted); font-size: 15px; }
 @media (max-width: 560px) { .prof { grid-template-columns: minmax(0, 1fr); } }
+/* Mehrbenutzer (Programm): Team, Chef-Übersicht, Abmelden */
+body:not(.pg-team) #team, body:not(.pg-chef) #chef { display: none !important; }
+body.pg-team #heuteRow, body.pg-team #projekte, body.pg-chef #heuteRow, body.pg-chef #projekte { display: none !important; }
+body.r-mitarbeiter #pDelete { display: none !important; }
+.side-foot { margin-top: auto; padding: 12px 6px 4px; display: flex; flex-direction: column; gap: 8px; }
+.side-as { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.side-as select { font: inherit; font-size: 14px; padding: 6px 8px; border-radius: 10px; border: 0.5px solid var(--line); background: var(--paper); color: var(--text); }
+.pw-box { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; border-top: 0.5px solid var(--line); padding-top: 14px; }
+.pw-box > b { grid-column: 1 / -1; }
+.pw-row { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.team-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 18px; max-width: 1000px; align-items: start; }
+.tm-list { display: flex; flex-direction: column; gap: 6px; }
+.tm-it { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 0; background: var(--glass-strong, var(--paper)); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.tm-it[aria-current="true"] { outline: 2px solid var(--accent); }
+.tm-it .av { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+.tm-it.aus .av { background: var(--fill2); color: var(--muted); }
+.tm-it .n { font-weight: 600; } .tm-it .r { font-size: 13px; color: var(--muted); }
+.tm-it .tag { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--fill2); color: var(--muted); }
+.tm-form select { font: inherit; padding: 8px; border-radius: 10px; border: 0.5px solid var(--line); background: var(--paper); color: var(--text); }
+.tm-akt { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+.chef-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 1100px; }
+.chef-grid .cb { display: block; max-width: none; }
+.chef-grid .cb-wide { grid-column: 1 / -1; }
+.cb h3 { margin: 0 0 10px; font-size: 17px; }
+.cb table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cb th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 4px 6px; border-bottom: 0.5px solid var(--line); }
+.cb td { padding: 7px 6px; border-bottom: 0.5px solid var(--line); vertical-align: top; }
+.cb td.num, .cb th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cb .late { color: var(--bad-text); font-weight: 600; }
+.cb .muted { color: var(--muted); }
+.cb .pbar { display: grid; grid-template-columns: minmax(70px, 120px) minmax(0, 1fr) 56px; gap: 10px; align-items: center; font-size: 14px; padding: 4px 0; }
+.cb .pbar > span { display: block; } .cb .pbar i { display: block; height: 10px; border-radius: 99px; background: var(--pc, var(--accent)); min-width: 3px; }
+.cb .leer { color: var(--muted); font-size: 14px; }
+.cb tr.go { cursor: pointer; } .cb tr.go:hover td { background: var(--fill); }
+@media (max-width: 860px) { .team-grid, .chef-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
 <div class="shell">
@@ -768,8 +803,14 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
   <button type="button" class="side-it" data-pg="home"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Übersicht</span></button>
   <button type="button" class="side-it" data-pg="zeit"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Zeiterfassung</span><span class="nm" id="sideZeit"></span></button>
   <button type="button" class="side-it" data-pg="server" id="sideServer" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Server</span><span class="nm"></span></button>
+  <button type="button" class="side-it" data-pg="chef" id="sideChef" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="12" width="4" height="7.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="7" width="4" height="12.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="16.5" y="4" width="4" height="15.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span><span class="lb">Chef-Übersicht</span><span class="nm"></span></button>
+  <button type="button" class="side-it" data-pg="team" id="sideTeam" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="9" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.5" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16.5 13c2.3 0 3.8 1.3 4.3 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="lb">Team</span><span class="nm"></span></button>
   <div class="side-h" id="sideProjH">Projekte</div>
   <div id="sideProj"></div>
+  <div class="side-foot" id="sideFoot" hidden>
+    <label class="side-as" id="sideAsBox" hidden><span>Ansicht als</span><select id="sideAs"><option value="mitarbeiter">Mitarbeiter</option><option value="chef">Chef</option><option value="admin">Administrator</option></select></label>
+    <button type="button" class="btn ghost" id="sideOut">Abmelden</button>
+  </div>
 </nav>
 <div class="wrap">
   <header class="top">
@@ -789,6 +830,37 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
       <div class="field"><label for="prTel">Telefon</label><input id="prTel" type="tel" autocomplete="tel"></div>
       <div class="field"><label for="prSoll">Soll pro Tag (h)</label><input id="prSoll" type="number" min="0" max="14" step="0.1"><span class="help">Gleich wie «Soll» in der Zeiterfassung</span></div>
       <div class="field"><label for="prPensum">Pensum (%)</label><input id="prPensum" type="number" min="0" max="100" step="5" placeholder="100"></div>
+      <div class="pw-box" id="pwBox" hidden>
+        <b>Passwort ändern</b>
+        <div class="field"><label for="pwAlt">Bisheriges Passwort</label><input id="pwAlt" type="password" autocomplete="current-password"></div>
+        <div class="field"><label for="pwNeu">Neues Passwort</label><input id="pwNeu" type="password" autocomplete="new-password"></div>
+        <div class="pw-row"><button type="button" class="btn" id="pwGo">Passwort ändern</button><span class="hint" id="pwMsg" aria-live="polite"></span></div>
+      </div>
+    </div>
+  </section>
+  <section id="team" aria-labelledby="teamTitle">
+    <div class="sec-head"><h2 id="teamTitle">Team</h2><span class="hint">Mitarbeiter erfassen, Rollen vergeben, Passwörter zurücksetzen</span></div>
+    <div class="team-grid">
+      <div class="tm-list" id="tmList" role="list"></div>
+      <div class="tm-form prof">
+        <div class="prof-head"><b id="tmHead">Neue Person</b></div>
+        <div class="field"><label for="tmName">Name</label><input id="tmName" placeholder="Vorname Nachname"></div>
+        <div class="field"><label for="tmKurz">Kürzel</label><input id="tmKurz" maxlength="4" placeholder="z. B. AB"></div>
+        <div class="field"><label for="tmRolle">Rolle</label><select id="tmRolle"><option value="mitarbeiter">Mitarbeiter</option><option value="chef">Chef</option><option value="admin">Administrator</option></select></div>
+        <div class="field"><label for="tmPw" id="tmPwL">Start-Passwort</label><input id="tmPw" type="text" autocomplete="off" placeholder="mind. 4 Zeichen"><span class="help" id="tmPwH">Die Person kann es danach im Profil ändern.</span></div>
+        <label class="tm-akt"><input type="checkbox" id="tmAktiv" checked> Aktiv (kann sich anmelden)</label>
+        <div class="pw-row"><button type="button" class="btn primary" id="tmSave">Speichern</button><button type="button" class="btn ghost" id="tmNew">Neue Person</button><span class="hint" id="tmMsg" aria-live="polite"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="chef" aria-labelledby="chefTitle">
+    <div class="sec-head"><h2 id="chefTitle">Chef-Übersicht</h2><span class="hint" id="chefKw"></span></div>
+    <div class="chef-grid">
+      <div class="cb prof"><h3>Team diese Woche</h3><div id="cbTeam"></div></div>
+      <div class="cb prof"><h3>Stunden pro Projekt</h3><div id="cbProj"></div></div>
+      <div class="cb prof cb-wide"><h3>Projekte</h3><div id="cbProjekte"></div></div>
+      <div class="cb prof cb-wide"><h3>Überfällige Aufgaben</h3><div id="cbLate"></div></div>
     </div>
   </section>
 
@@ -1659,7 +1731,7 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     if (!loaded) { g.append(el('p', 'empty', db === false ? 'Projekte sind hier nicht verfügbar. Öffne das Cockpit angemeldet in claude.ai.' : 'Projekte werden geladen …')); return; }
     (focusP ? projects.filter((p) => p.id === focusP) : projects).forEach((p) => g.append(card(p)));
     if (focusP && !projects.some((p) => p.id === focusP)) { setPage('home'); return; }
-    if (canWrite && !focusP) {
+    if (canWrite && !focusP && window.__rolle !== 'mitarbeiter') {
       const n = el('button', 'newcard', '+ Neues Projekt'); n.type = 'button';
       n.addEventListener('click', () => openPanel(null));
       g.append(n);
@@ -3618,13 +3690,15 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     $('sideZeit').textContent = $('dec').textContent !== '–' ? $('dec').textContent + ' h' : '';
     if (focusP && !$('pordner').hidden !== !!(projects.find((x) => x.id === focusP) || {}).ordner) showOrdner();
     renderVerk();
+    if (page === 'chef') { clearTimeout(window.__chefT); window.__chefT = setTimeout(renderChef, 400); }
     if (focusP) { const p = projects.find((x) => x.id === focusP); if (p) { $('projTitle').replaceChildren(document.createTextNode(p.name || p.id)); if (p.titel) $('projTitle').append(el('span', 'proj-sub', p.titel)); } }
   };
   const setPage = (pg) => {
     const wasP = !!focusP;
     page = pg || 'home';
+    if ((page === 'team' || page === 'chef') && !bossView()) page = 'home';
     focusP = page.startsWith('p:') ? page.slice(2) : null;
-    document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server');
+    document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server', 'pg-team', 'pg-chef');
     document.body.classList.add(focusP ? 'pg-projekt' : 'pg-' + page);
     try { localStorage.setItem(PK, page); } catch (_) {}
     if (focusP) {
@@ -3636,6 +3710,8 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
       if (wasP) { let v = 'karten'; try { v = localStorage.getItem(VK) || 'karten'; } catch (_) {} setView(v); }
     }
     render(); renderTime(); showOrdner(); renderVerk();
+    if (page === 'team') renderTeam();
+    if (page === 'chef') renderChef();
     window.scrollTo({ top: 0 });
   };
   // Dateien auf dem Server (nur im Programm): Projektordner, Seite «Server», Verknüpfungen mit Projekten und Aufgaben
@@ -3809,7 +3885,172 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
     if (view === 'mindmap') { const r = mm.getBoundingClientRect(); if (r.bottom > window.innerHeight || r.top < 0) $('projekte').scrollIntoView({ block: 'start', behavior: 'smooth' }); }
   }));
   try { const v = localStorage.getItem(VK); if (v === 'mindmap' || v === 'kalender') setView(v); } catch (_) {}
-  try { const pg = localStorage.getItem(PK); setPage(pg && pg !== 'profil' && pg !== 'zeit' && !pg.startsWith('p:') ? 'home' : pg || 'home'); } catch (_) { setPage('home'); }
+  /* ---------- Mehrbenutzer (nur im Programm): Rollen, Team, Chef-Übersicht ---------- */
+  // ich = angemeldete Person; ansicht = Rolle, als die die Seite gerade gezeigt wird (der Administrator kann umschalten)
+  let ich = null, ansicht = null;
+  const ROLLEN = { mitarbeiter: 'Mitarbeiter', chef: 'Chef', admin: 'Administrator' };
+  const AK = 'cockpit-zg-ansicht';
+  function bossView() { return ansicht === 'chef' || ansicht === 'admin'; }
+  const applyRolle = () => {
+    document.body.classList.remove('r-mitarbeiter', 'r-chef', 'r-admin');
+    window.__rolle = ansicht;
+    if (!ansicht) return;
+    document.body.classList.add('r-' + ansicht);
+    $('sideTeam').hidden = !bossView(); $('sideChef').hidden = !bossView();
+    $('sideRolle').textContent = ROLLEN[ansicht] + (ich && ansicht !== ich.rolle ? ' (Ansicht)' : '');
+    if ((page === 'team' || page === 'chef') && !bossView()) setPage('home'); else render();
+  };
+  const iniOf = (u) => (u.kuerzel || (u.name || '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 3) || '?').toUpperCase();
+
+  // Team: Liste links, Formular rechts
+  let tmSel = null, tmUsers = [];
+  const tmFill = (u) => {
+    tmSel = u || null;
+    $('tmHead').textContent = u ? u.name : 'Neue Person';
+    $('tmName').value = u ? u.name : ''; $('tmKurz').value = u ? u.kuerzel : '';
+    $('tmRolle').value = u ? u.rolle : 'mitarbeiter'; $('tmAktiv').checked = u ? u.aktiv : true;
+    $('tmPw').value = ''; $('tmPwL').textContent = u ? 'Neues Passwort setzen' : 'Start-Passwort';
+    $('tmPwH').textContent = u ? 'Leer lassen, wenn das Passwort bleiben soll.' : 'Die Person kann es danach im Profil ändern.';
+    const admin = ich && ich.rolle === 'admin';
+    [...$('tmRolle').options].forEach((o) => { o.disabled = !admin && o.value !== 'mitarbeiter'; });
+    const locked = !admin && u && u.rolle !== 'mitarbeiter';
+    ['tmName', 'tmKurz', 'tmRolle', 'tmPw', 'tmAktiv', 'tmSave'].forEach((x) => { $(x).disabled = !!locked; });
+    $('tmMsg').textContent = locked ? 'Chef und Administrator ändert nur der Administrator.' : '';
+    document.querySelectorAll('.tm-it').forEach((b) => b.setAttribute('aria-current', String(!!u && b.dataset.id === u.id)));
+  };
+  async function renderTeam() {
+    if (!window.native || !window.native.teamList) return;
+    tmUsers = await window.native.teamList();
+    const box = $('tmList'); box.replaceChildren();
+    tmUsers.forEach((u) => {
+      const b = el('button', 'tm-it' + (u.aktiv ? '' : ' aus')); b.type = 'button'; b.dataset.id = u.id; b.setAttribute('role', 'listitem');
+      const tx = el('span'); tx.append(el('div', 'n', u.name), el('div', 'r', ROLLEN[u.rolle] || 'Mitarbeiter'));
+      b.append(el('span', 'av', iniOf(u)), tx, el('span', 'tag', u.aktiv ? (ich && u.id === ich.id ? 'Du' : '') : 'inaktiv'));
+      if (!b.lastChild.textContent) b.lastChild.hidden = true;
+      b.addEventListener('click', () => tmFill(u));
+      box.append(b);
+    });
+    tmFill(tmSel ? tmUsers.find((u) => u.id === tmSel.id) : null);
+  }
+  if (window.native && window.native.teamSave) {
+    $('tmNew').addEventListener('click', () => { tmFill(null); $('tmName').focus(); });
+    $('tmSave').addEventListener('click', async () => {
+      const d = { id: tmSel ? tmSel.id : undefined, name: $('tmName').value, kuerzel: $('tmKurz').value, rolle: $('tmRolle').value, aktiv: $('tmAktiv').checked, pw: $('tmPw').value };
+      $('tmSave').disabled = true;
+      const r = await window.native.teamSave(d);
+      $('tmSave').disabled = false;
+      if (!r.ok) { $('tmMsg').textContent = r.error; return; }
+      tmSel = { id: r.id }; await renderTeam();
+      $('tmMsg').textContent = d.pw ? 'Gespeichert. Passwort gesetzt.' : 'Gespeichert.';
+    });
+  }
+
+  // Chef-Übersicht: Stunden aller Mitarbeiter, Stunden pro Projekt, Projekte, überfällige Aufgaben
+  const fmtStd = (h) => (h == null ? '–' : h.toFixed(1).replace('.', ',') + ' h');
+  async function renderChef() {
+    if (page !== 'chef' || !db || !window.native) return;
+    const today = isoDay(), now = new Date();
+    const mo = new Date(now); mo.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const days = []; for (let d = new Date(mo); isoDay(d) <= today; d.setDate(d.getDate() + 1)) days.push(isoDay(d));
+    const kw = (() => { const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())); const n = d.getUTCDay() || 7; d.setUTCDate(d.getUTCDate() + 4 - n); const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); return Math.ceil(((d - y) / 864e5 + 1) / 7); })();
+    $('chefKw').textContent = 'KW ' + kw + ' · ' + days.length + ' Arbeitstag' + (days.length === 1 ? '' : 'e') + ' bis heute';
+    const team = (await window.native.teamList()).filter((u) => u.aktiv);
+    const perProj = {};
+    const rows = await Promise.all(team.map(async (u) => {
+      const [tg, sp] = await Promise.all([db.collection('data/users/' + u.id + '/zeit/tage').get(), db.collection('data/users/' + u.id + '/zeit/split').get()]);
+      const t = {}; tg.docs.forEach((x) => { const v = x.data(); if (v && v.datum) t[v.datum] = v; });
+      sp.docs.forEach((x) => { const v = x.data(); if (v && v.datum && days.includes(v.datum) && v.projekte) Object.entries(v.projekte).forEach(([k, h]) => { perProj[k] = (perProj[k] || 0) + (Number(h) || 0); }); });
+      let week = 0, any = false;
+      days.forEach((d) => { const v = t[d]; if (!v) return; const r = dayHours(v, d === today); if (r && r.h != null) { week += r.h; any = true; } });
+      const td = t[today] ? dayHours(t[today], true) : null;
+      const last = Object.keys(t).sort().pop() || '';
+      return { u, heute: td && td.h != null ? td.h : null, live: td && td.live, week: any ? week : null, last, kommen: t[today] && t[today].kommen };
+    }));
+    // Team
+    const tb = $('cbTeam'); tb.replaceChildren();
+    if (!rows.length) tb.append(el('p', 'leer', 'Noch keine Mitarbeiter. Unter «Team» erfassen.'));
+    else {
+      const tbl = el('table'); const h = el('tr'); ['Name', 'Heute', 'Woche', 'Zuletzt erfasst'].forEach((x, i) => h.append(el('th', i && i < 3 ? 'num' : '', x)));
+      tbl.append(h);
+      rows.forEach((r) => {
+        const tr = el('tr');
+        tr.append(el('td', '', r.u.name + (r.u.kuerzel ? ' (' + r.u.kuerzel + ')' : '')), el('td', 'num', r.heute != null ? fmtStd(r.heute) + (r.live ? ' ·' : '') : r.kommen ? '–' : 'nicht da'), el('td', 'num', fmtStd(r.week)),
+          el('td', 'muted', r.last ? new Date(r.last + 'T00:00').toLocaleDateString('de-CH', { weekday: 'short', day: 'numeric', month: 'numeric' }) : 'noch nie'));
+        if (r.live) tr.children[1].title = 'läuft noch (noch kein «Gehen»)';
+        tbl.append(tr);
+      });
+      tb.append(tbl);
+    }
+    // Stunden pro Projekt
+    const pb = $('cbProj'); pb.replaceChildren();
+    const ent = Object.entries(perProj).filter(([, h]) => h > 0).sort((a, b) => b[1] - a[1]);
+    if (!ent.length) pb.append(el('p', 'leer', 'Diese Woche noch keine Stunden auf Projekten. Sie entstehen, wenn Mitarbeiter Aufgaben abhaken.'));
+    const mx = ent.length ? ent[0][1] : 1;
+    ent.forEach(([k, h]) => {
+      const p = projects.find((x) => x.id === k);
+      const row = el('div', 'pbar'); const bar = el('i'); bar.style.width = Math.max(2, (h / mx) * 100) + '%';
+      if (p && farbeOf(p)) bar.style.setProperty('--pc', farbeOf(p));
+      const wrap = el('span'); wrap.append(bar);
+      row.append(el('span', '', p ? p.name || p.id : k === 'ohne' || !k ? 'Ohne Projekt' : k), wrap, el('span', 'num', fmtStd(h)));
+      pb.append(row);
+    });
+    // Projekte
+    const jb = $('cbProjekte'); jb.replaceChildren();
+    if (!projects.length) jb.append(el('p', 'leer', 'Noch keine Projekte.'));
+    else {
+      const tbl = el('table'); const h = el('tr'); ['Projekt', 'Phase', 'Status', 'Verantwortlich', 'Offen', 'Überfällig', 'Std. Woche'].forEach((x, i) => h.append(el('th', i >= 4 ? 'num' : '', x)));
+      tbl.append(h);
+      projects.forEach((p) => {
+        const mine = tasks.filter((t) => t.projekt === p.id && !t.erledigt);
+        const late = mine.filter((t) => t.faellig && t.faellig < today).length;
+        const tr = el('tr', 'go'); tr.title = 'Projektseite öffnen';
+        tr.append(el('td', '', (p.name || p.id) + (p.titel ? ' · ' + p.titel : '')), el('td', '', p.phase ? p.phase + ' ' + (PHASE_NAME[p.phase] || '') : '–'), el('td', '', STATUS_NAME[p.status] || '–'),
+          el('td', '', p.verantwortlich || '–'), el('td', 'num', String(mine.length)), el('td', 'num' + (late ? ' late' : ''), late ? String(late) : '–'), el('td', 'num', perProj[p.id] ? fmtStd(perProj[p.id]) : '–'));
+        tr.addEventListener('click', () => setPage('p:' + p.id));
+        tbl.append(tr);
+      });
+      jb.append(tbl);
+    }
+    // Überfällige Aufgaben
+    const lb = $('cbLate'); lb.replaceChildren();
+    const late = tasks.filter((t) => !t.erledigt && t.faellig && t.faellig < today).sort((a, b) => a.faellig.localeCompare(b.faellig));
+    if (!late.length) lb.append(el('p', 'leer', 'Nichts überfällig.'));
+    else {
+      const tbl = el('table'); const h = el('tr'); ['Aufgabe', 'Projekt', 'Fällig seit'].forEach((x) => h.append(el('th', '', x))); tbl.append(h);
+      late.forEach((t) => {
+        const p = projects.find((x) => x.id === t.projekt);
+        const tr = el('tr'); tr.append(el('td', '', t.text || 'Aufgabe'), el('td', '', p ? p.name || p.id : '–'), el('td', 'late', new Date(t.faellig + 'T00:00').toLocaleDateString('de-CH')));
+        tbl.append(tr);
+      });
+      lb.append(tbl);
+    }
+  }
+
+  if (window.native && window.native.me) {
+    $('sideFoot').hidden = false;
+    $('sideOut').addEventListener('click', () => window.native.authLogout());
+    $('pwBox').hidden = false;
+    $('pwGo').addEventListener('click', async () => {
+      const r = await window.native.changePassword($('pwAlt').value, $('pwNeu').value);
+      $('pwMsg').textContent = r.ok ? 'Passwort geändert.' : r.error;
+      if (r.ok) { $('pwAlt').value = ''; $('pwNeu').value = ''; }
+    });
+    $('sideAs').addEventListener('change', () => { ansicht = $('sideAs').value; try { localStorage.setItem(AK, ansicht); } catch (_) {} applyRolle(); });
+    window.native.me().then((m) => {
+      if (!m) return;
+      ich = m;
+      ansicht = m.rolle;
+      if (m.rolle === 'admin') { $('sideAsBox').hidden = false; try { const a = localStorage.getItem(AK); if (ROLLEN[a]) ansicht = a; } catch (_) {} $('sideAs').value = ansicht; }
+      // Name und Kürzel aus dem Team, wenn im Profil noch nichts steht
+      if (!$('prName').value) { $('prName').value = m.name; $('prKurz').value = m.kuerzel; }
+      if (!profil.name) { profil = { ...profil, name: m.name, kuerzel: m.kuerzel }; showProfil(); }
+      applyRolle();
+      let pg = null; try { pg = localStorage.getItem(PK); } catch (_) {}
+      if (pg === 'team' || pg === 'chef') setPage(pg);
+    });
+  }
+
+  try { const pg = localStorage.getItem(PK); setPage(pg && pg !== 'profil' && pg !== 'zeit' && pg !== 'server' && !pg.startsWith('p:') ? 'home' : pg || 'home'); } catch (_) { setPage('home'); }
 
   // A short tick on touch, where the device supports it
   document.addEventListener('pointerdown', (e) => {

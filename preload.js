@@ -16,5 +16,13 @@ contextBridge.exposeInMainWorld('native', {
   onDataStatus: (cb) => ipcRenderer.on('data-status', (_e, st) => cb(st)),
   pathOf: (file) => { try { return webUtils.getPathForFile(file) || ''; } catch (_) { return ''; } },
   listDir: (p) => ipcRenderer.invoke('list-dir', p),
+  authState: () => ipcRenderer.invoke('auth-state'),
+  authSetup: (d) => ipcRenderer.invoke('auth-setup', d),
+  authLogin: (id, pw) => ipcRenderer.invoke('auth-login', { id, pw }),
+  authLogout: () => ipcRenderer.invoke('auth-logout'),
+  me: () => ipcRenderer.invoke('auth-me'),
+  changePassword: (alt, neu) => ipcRenderer.invoke('auth-password', { alt, neu }),
+  teamList: () => ipcRenderer.invoke('team-list'),
+  teamSave: (d) => ipcRenderer.invoke('team-save', d),
   onAskDataDir: (cb) => ipcRenderer.on('ask-data-dir', () => cb()),
 });
