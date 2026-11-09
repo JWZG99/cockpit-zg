@@ -18,8 +18,12 @@ Alles liegt in einem Ordner. Standard ist `Dokumente\Cockpit ZG`, im Menü kanns
 
 Programme und Skripte in verknüpften Pfaden werden nie gestartet, nur im Explorer gezeigt.
 
+## Daten aus dem Online-Cockpit übernehmen
+
+Die Daten aus claude.ai gibt es als ZIP mit einem Ordner `Cockpit ZG` (darin `cockpit-daten.json` und `dateien\`). Den Ordner entpacken, z. B. nach `Dokumente` oder auf den Server, und im Programm unter «Cockpit → Datenordner wählen …» auswählen. Die persönliche Zeiterfassung liegt dort unter `data/users/lokal/…`.
+
 ## Neue Version veröffentlichen
 
 1. Die Version in `package.json` erhöhen und auf `main` pushen.
 2. GitHub Actions baut den Windows-Installer und legt ihn als Release `vX.Y.Z` ab.
-4. Das installierte Programm findet das Update beim nächsten Start selbst.
+3. Das installierte Programm findet das Update beim nächsten Start selbst.
