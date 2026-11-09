@@ -288,6 +288,42 @@ const listDir = (p) => {
   }
 };
 ipcMain.handle('list-dir', (_e, p) => listDir(p));
+// Seite «Server»: im Explorer zeigen, neuer Ordner, löschen (mit Rückfrage)
+const cleanP = (p) => String(p || '').trim().replace(/^"(.*)"$/, '$1');
+const isRoot = (p) => { const r = path.parse(p).root; return !p || path.resolve(p) === path.resolve(r) || /^\\\\[^\\]+\\[^\\]+\\?$/.test(p); };
+const geschuetzt = (p) => {
+  const n = path.resolve(p).toLowerCase();
+  const prot = [BUERO, dataDir(), app.getPath('userData'), path.dirname(app.getPath('exe'))].map((x) => path.resolve(x).toLowerCase());
+  return isRoot(p) || prot.some((x) => n === x || x.startsWith(n + path.sep));
+};
+ipcMain.handle('show-in-folder', (_e, p) => { p = cleanP(p); if (fs.existsSync(p)) shell.showItemInFolder(p); return { ok: true }; });
+ipcMain.handle('make-dir', (_e, { in: inDir, name }) => {
+  name = String(name || '').trim();
+  if (!name || /[<>:"/\\|?*\x00-\x1f]/.test(name) || /^\.+$/.test(name) || /[. ]$/.test(name)) return { ok: false, error: 'Dieser Name geht nicht (keine Zeichen wie \\ / : * ? " < > |).' };
+  const full = path.join(cleanP(inDir), name);
+  if (fs.existsSync(full)) return { ok: false, error: 'Diesen Ordner gibt es schon.' };
+  try { fs.mkdirSync(full); return { ok: true, path: full }; } catch (e) { return { ok: false, error: e.code === 'EPERM' || e.code === 'EACCES' ? 'Keine Berechtigung für diesen Ordner.' : 'Ordner anlegen ging nicht.' }; }
+});
+ipcMain.handle('delete-path', async (_e, p) => {
+  p = cleanP(p);
+  if (!p || !fs.existsSync(p)) return { ok: false, error: 'Nicht gefunden.' };
+  if (geschuetzt(p)) return { ok: false, error: 'Diesen Ordner kann man hier nicht löschen (Laufwerk oder Cockpit-Ordner).' };
+  let st; try { st = fs.statSync(p); } catch (_) { return { ok: false, error: 'Nicht lesbar.' }; }
+  let inhalt = '';
+  if (st.isDirectory()) { try { const n = fs.readdirSync(p).length; inhalt = n ? 'Er enthält ' + n + (n === 1 ? ' Eintrag' : ' Einträge') + ' (mit allen Unterordnern).' : 'Er ist leer.'; } catch (_) {} }
+  const lokal = /^c:/i.test(p);
+  const r = await dialog.showMessageBox(win, {
+    type: 'warning', buttons: ['Abbrechen', 'Löschen'], defaultId: 0, cancelId: 0, noLink: true, title: 'Löschen',
+    message: (st.isDirectory() ? 'Ordner' : 'Datei') + ' «' + path.basename(p) + '» löschen?',
+    detail: [p, inhalt, lokal ? 'Er kommt in den Papierkorb.' : 'Achtung: Auf dem Server gibt es keinen Windows-Papierkorb. Danach ist es weg (nur noch über die Server-Sicherung zurückzuholen).'].filter(Boolean).join('\n\n'),
+  });
+  if (r.response !== 1) return { ok: false, abgebrochen: true };
+  try { await shell.trashItem(p); }
+  catch (_) {
+    try { fs.rmSync(p, { recursive: true }); } catch (e) { return { ok: false, error: e.code === 'EPERM' || e.code === 'EACCES' || e.code === 'EBUSY' ? 'Löschen ging nicht: keine Berechtigung, oder eine Datei darin ist noch offen.' : 'Löschen ging nicht.' }; }
+  }
+  return { ok: true };
+});
 // Assistent (Claude) im Programm
 require('./ki')({ ipcMain, dataDir, getStore: () => store, commit, changed, me, isAdmin: () => { const m = me(); return !!m && m.rolle === 'admin'; }, listDir });
 

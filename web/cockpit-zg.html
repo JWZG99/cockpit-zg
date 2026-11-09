@@ -181,6 +181,29 @@ body.pg-server #heuteRow, body.pg-server #projekte { display: none !important; }
 #pordner .fit .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #pordner .fit .m { font-size: 13px; color: var(--muted); white-space: nowrap; }
 #pordner .leer { padding: 14px; color: var(--muted); font-size: 14px; }
+#pordner .crumbs { flex: 1 1 260px; min-width: 0; display: flex; align-items: center; flex-wrap: nowrap; overflow: hidden; gap: 0; font-size: 14px; font-weight: 400; padding: 3px 6px; border-radius: 10px; border: 1px solid var(--line, rgba(0,0,0,.12)); background: var(--card, #fff); cursor: text; min-height: 34px; }
+#pordner .crumbs button { flex: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: inherit; color: inherit; background: none; border: 0; border-radius: 7px; padding: 3px 6px; cursor: pointer; }
+#pordner .crumbs button:hover, #pordner .crumbs button:focus-visible { background: var(--fill); color: var(--accent, #0a84ff); }
+#pordner .crumbs button:last-of-type { font-weight: 600; }
+#pordner .crumbs .sep { flex: none; color: var(--muted); padding: 0 1px; }
+#pordner .crumbs .rest { flex: 1 1 auto; align-self: stretch; min-width: 20px; }
+#pordner .crumbs .more { color: var(--muted); }
+.stabs { display: flex; gap: 4px; align-items: flex-end; margin: 0 4px 10px; overflow-x: auto; scrollbar-width: thin; }
+.stabs .tab { display: flex; align-items: center; gap: 4px; flex: 0 1 200px; min-width: 90px; padding: 6px 6px 6px 12px; border-radius: 10px; background: var(--fill); color: var(--muted); font-size: 14px; cursor: pointer; border: 0; font-family: inherit; }
+.stabs .tab .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto; text-align: left; }
+.stabs .tab[aria-selected="true"] { background: var(--card, #fff); color: var(--text, inherit); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.stabs .tab .x { flex: none; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 15px; line-height: 1; color: var(--muted); }
+.stabs .tab .x:hover { background: rgba(127,127,127,.2); color: inherit; }
+.stabs .plus { flex: none; width: 34px; height: 32px; border-radius: 10px; border: 0; background: none; font: inherit; font-size: 20px; line-height: 1; color: var(--accent, #0a84ff); cursor: pointer; }
+.stabs .plus:hover { background: var(--fill); }
+#pordner .fit.neu input { font: inherit; font-size: 15px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--accent, #0a84ff); background: var(--card, #fff); color: inherit; min-width: 0; }
+#pordner .fit.sel { background: var(--fill); }
+.ctx { position: fixed; z-index: 1000; min-width: 210px; padding: 5px; border-radius: 12px; background: var(--card, #fff); color: var(--text, inherit); box-shadow: 0 10px 34px rgba(0,0,0,.22), 0 0 0 1px var(--line, rgba(0,0,0,.08)); font-size: 14px; }
+.ctx button { display: block; width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; border-radius: 7px; padding: 7px 12px; cursor: pointer; }
+.ctx button:hover, .ctx button:focus-visible { background: var(--accent, #0a84ff); color: #fff; outline: none; }
+.ctx button.bad { color: var(--bad, #c0392b); }
+.ctx button.bad:hover, .ctx button.bad:focus-visible { background: var(--bad, #c0392b); color: #fff; }
+.ctx hr { border: 0; border-top: 1px solid var(--line, rgba(0,0,0,.1)); margin: 4px 6px; }
 
 .grid.movable .card-head { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .card.dragging { position: relative; z-index: 5; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22); pointer-events: none; }
@@ -1002,9 +1025,11 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     <div class="flist" id="pverkList"></div>
   </section>
   <section id="pordner" hidden aria-labelledby="pordnerT">
-    <h3><span class="tt" id="pordnerT">Projektordner</span><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false"><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
+    <div class="stabs" id="srvTabs" role="tablist" aria-label="Server-Tabs" hidden></div>
+    <h3><span class="tt" id="pordnerT">Projektordner</span><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
     <div class="flist" id="pordnerList"></div>
     <p class="fmsg" id="pordnerMsg" aria-live="polite"></p>
+    <div class="ctx" id="ctxMenu" role="menu" hidden></div>
   </section>
   <p class="datafoot" id="dataFoot" hidden><span class="dst" id="dataSt"></span>Daten: <span id="dataDir"></span> <button type="button" class="btn ghost" id="dataDirBtn">Ordner ändern …</button></p>
 </div>
@@ -3769,40 +3794,204 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     b.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target === b) onOpen(); });
     return b;
   };
+  // Seite «Server»: mehrere Tabs (jeder merkt sich seinen Ordner), klickbarer Pfad, Rechtsklick-Menü
+  const SRV_TABS = SRV + '-tabs';
+  let srvTabs = null, srvAkt = 0;
+  const loadTabs = () => {
+    if (srvTabs) return;
+    try { const o = JSON.parse(localStorage.getItem(SRV_TABS) || 'null'); if (o && Array.isArray(o.tabs) && o.tabs.length) { srvTabs = o.tabs.filter((t) => t && typeof t.pfad === 'string'); srvAkt = Math.min(Math.max(0, o.akt | 0), srvTabs.length - 1); } } catch (_) {}
+    if (!srvTabs || !srvTabs.length) { let r = 'G:\\'; try { r = localStorage.getItem(SRV) || r; } catch (_) {} srvTabs = [{ pfad: r }]; srvAkt = 0; }
+  };
+  const saveTabs = () => { try { localStorage.setItem(SRV_TABS, JSON.stringify({ tabs: srvTabs, akt: srvAkt })); localStorage.setItem(SRV, srvTabs[srvAkt].pfad); } catch (_) {} };
+  const tabName = (p) => (/^[A-Za-z]:[\\/]?$/.test(p) ? p.slice(0, 2) : baseName(p));
+  const renderTabs = () => {
+    const bar = $('srvTabs');
+    if (page !== 'server') { bar.hidden = true; return; }
+    bar.hidden = false; bar.replaceChildren();
+    srvTabs.forEach((t, i) => {
+      const b = el('button', 'tab'); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', i === srvAkt ? 'true' : 'false'); b.title = t.pfad;
+      b.append(el('span', 'n', tabName(t.pfad)));
+      if (srvTabs.length > 1) { const x = el('span', 'x', '×'); x.setAttribute('role', 'button'); x.setAttribute('aria-label', 'Tab schliessen'); x.addEventListener('click', (e) => { e.stopPropagation(); closeTab(i); }); b.append(x); }
+      b.addEventListener('click', () => { if (i !== srvAkt) { srvAkt = i; saveTabs(); showOrdner(); } });
+      b.addEventListener('auxclick', (e) => { if (e.button === 1 && srvTabs.length > 1) { e.preventDefault(); closeTab(i); } });
+      bar.append(b);
+    });
+    const plus = el('button', 'plus', '+'); plus.type = 'button'; plus.title = 'Neuer Tab'; plus.setAttribute('aria-label', 'Neuer Tab');
+    plus.addEventListener('click', () => newTab(odPfad || 'G:\\'));
+    bar.append(plus);
+    const act = bar.children[srvAkt]; if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  };
+  const newTab = (pfad) => { loadTabs(); srvTabs.push({ pfad }); srvAkt = srvTabs.length - 1; saveTabs(); showOrdner(); };
+  const closeTab = (i) => { if (srvTabs.length < 2) return; srvTabs.splice(i, 1); if (srvAkt >= i && srvAkt > 0) srvAkt--; saveTabs(); showOrdner(); };
+
+  // Pfad als Knöpfe: G: › 03 Dokumente › 90 ZG Programm
+  const pfadTeile = (p) => {
+    const t = String(p).replace(/[\\/]+$/, '');
+    const out = [];
+    let start, rest;
+    const unc = t.match(/^\\\\[^\\]+\\[^\\]+/);
+    if (unc) { start = unc[0]; rest = t.slice(start.length); out.push({ name: start.replace(/^\\\\/, ''), pfad: start + '\\' }); }
+    else if (/^[A-Za-z]:/.test(t)) { start = t.slice(0, 2); rest = t.slice(2); out.push({ name: start, pfad: start + '\\' }); }
+    else { start = ''; rest = t; }
+    let acc = start;
+    rest.split(/[\\/]/).filter(Boolean).forEach((seg) => { acc = acc ? acc + '\\' + seg : seg; out.push({ name: seg, pfad: acc }); });
+    return out;
+  };
+  const drawCrumbs = (root) => {
+    const nav = $('pordnerCrumbs'); nav.replaceChildren();
+    let teile = pfadTeile(odPfad);
+    if (root) { const n = pfadTeile(root).length; teile = teile.slice(Math.max(0, n - 1)); }
+    teile.forEach((t, i) => {
+      if (i) nav.append(el('span', 'sep', '›'));
+      const b = el('button', '', t.name); b.type = 'button'; b.title = t.pfad;
+      b.addEventListener('click', (e) => { e.stopPropagation(); showOrdner(t.pfad); });
+      nav.append(b);
+    });
+    nav.append(el('span', 'rest'));
+    nav.scrollLeft = nav.scrollWidth;
+  };
+  const editPfad = () => { const inp = $('pordnerPfad'); $('pordnerCrumbs').hidden = true; inp.hidden = false; inp.value = odPfad || ''; inp.focus(); inp.select(); };
+  const endEdit = () => { $('pordnerPfad').hidden = true; $('pordnerCrumbs').hidden = false; };
+  $('pordnerCrumbs').addEventListener('click', (e) => { if (e.target.tagName !== 'BUTTON') editPfad(); });
+  $('pordnerPfad').addEventListener('blur', endEdit);
+
+  // Rechtsklick-Menü
+  const ctx = $('ctxMenu');
+  const closeCtx = () => { ctx.hidden = true; ctx.replaceChildren(); document.querySelectorAll('#pordner .fit.sel').forEach((x) => x.classList.remove('sel')); };
+  const openCtx = (e, items) => {
+    e.preventDefault(); e.stopPropagation();
+    ctx.replaceChildren();
+    items.forEach((it) => {
+      if (it === '-') { ctx.append(document.createElement('hr')); return; }
+      const b = el('button', it.bad ? 'bad' : '', it.t); b.type = 'button'; b.setAttribute('role', 'menuitem');
+      b.addEventListener('click', () => { closeCtx(); it.f(); });
+      ctx.append(b);
+    });
+    ctx.hidden = false;
+    const w = ctx.offsetWidth, h = ctx.offsetHeight;
+    ctx.style.left = Math.max(4, Math.min(e.clientX, innerWidth - w - 4)) + 'px';
+    ctx.style.top = Math.max(4, Math.min(e.clientY, innerHeight - h - 4)) + 'px';
+    const first = ctx.querySelector('button'); if (first) first.focus({ preventScroll: true });
+  };
+  document.addEventListener('mousedown', (e) => { if (!ctx.hidden && !ctx.contains(e.target)) closeCtx(); }, true);
+  document.addEventListener('keydown', (e) => {
+    if (ctx.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeCtx(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); const bs = [...ctx.querySelectorAll('button')]; const i = bs.indexOf(document.activeElement);
+      bs[(i + (e.key === 'ArrowDown' ? 1 : bs.length - 1)) % bs.length].focus();
+    }
+  });
+  window.addEventListener('blur', closeCtx);
+  window.addEventListener('resize', closeCtx);
+  document.addEventListener('scroll', closeCtx, true);
+  const kopieren = async (t) => { try { await navigator.clipboard.writeText(t); fMsg('Pfad kopiert.'); } catch (_) { fMsg('Kopieren ging nicht.'); } };
+  const loeschen = async (f) => {
+    const r = await window.native.deletePath(f.path);
+    if (r.ok) { fMsg('«' + f.name + '» gelöscht.'); showOrdner(odPfad); }
+    else if (!r.abgebrochen) fMsg(r.error || 'Löschen ging nicht.');
+  };
+  const itemMenu = (e, f, row) => {
+    const server = page === 'server';
+    row.classList.add('sel');
+    const it = [];
+    if (f.ordner) {
+      it.push({ t: 'Öffnen', f: () => showOrdner(f.path) });
+      if (server) it.push({ t: 'In neuem Tab öffnen', f: () => newTab(f.path) });
+      it.push({ t: 'Im Explorer öffnen', f: () => window.native.openPath(f.path) });
+    } else {
+      it.push({ t: 'Öffnen', f: () => openFile(f.path) });
+      it.push({ t: 'Im Explorer zeigen', f: () => window.native.showInFolder(f.path) });
+    }
+    if (canWrite) it.push({ t: 'Verknüpfen …', f: () => openLink(f.path) });
+    it.push({ t: 'Pfad kopieren', f: () => kopieren(f.path) });
+    it.push('-', { t: 'Neuer Ordner', f: neuerOrdner });
+    if (window.native.deletePath) it.push('-', { t: f.ordner ? 'Ordner löschen …' : 'Datei löschen …', bad: true, f: () => loeschen(f) });
+    openCtx(e, it);
+  };
+  const leerMenu = (e) => openCtx(e, [
+    { t: 'Neuer Ordner', f: neuerOrdner },
+    { t: 'Aktualisieren', f: () => showOrdner(odPfad) },
+    { t: 'Im Explorer öffnen', f: () => odPfad && window.native.openPath(odPfad) },
+    { t: 'Pfad kopieren', f: () => odPfad && kopieren(odPfad) },
+  ]);
+  $('pordnerList').addEventListener('contextmenu', (e) => { if (e.target === $('pordnerList') || e.target.classList.contains('leer')) leerMenu(e); });
+
+  // Neuer Ordner: Zeile oben in der Liste, Namen eintippen, Enter
+  function neuerOrdner() {
+    if (!odPfad || !window.native.makeDir) return;
+    const box = $('pordnerList');
+    const alt = box.querySelector('.fit.neu'); if (alt) { alt.querySelector('input').focus(); return; }
+    const row = el('div', 'fit neu'); const inp = document.createElement('input'); inp.value = 'Neuer Ordner'; inp.setAttribute('aria-label', 'Name des neuen Ordners');
+    row.append(el('span', '', '📁'), inp);
+    box.prepend(row); box.querySelectorAll(':scope > .leer').forEach((x) => x.remove());
+    inp.focus(); inp.select();
+    let fertig = false;
+    const go = async (anlegen) => {
+      if (fertig) return; fertig = true;
+      const name = inp.value.trim();
+      if (!anlegen || !name) { row.remove(); if (!odItems.length) drawOrdner(); return; }
+      const r = await window.native.makeDir(odPfad, name);
+      if (r.ok) { fMsg('Ordner «' + name + '» angelegt.'); await showOrdner(odPfad); }
+      else { fMsg(r.error); fertig = false; inp.focus(); inp.select(); }
+    };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); go(false); } });
+    inp.addEventListener('blur', () => { setTimeout(() => { if (!fertig && document.activeElement !== inp) go(inp.value.trim() && inp.value.trim() !== 'Neuer Ordner' ? true : false); }, 0); });
+  }
+  $('pordnerNeu').addEventListener('click', neuerOrdner);
+
   const drawOrdner = () => {
     const box = $('pordnerList'); box.replaceChildren();
     const q = $('pordnerSuch').value.trim().toLowerCase();
     const list = q ? odItems.filter((f) => f.name.toLowerCase().includes(q)) : odItems;
-    if (!list.length) { box.append(el('div', 'leer', q ? 'Nichts gefunden.' : 'Der Ordner ist leer.')); return; }
+    if (!list.length) { box.append(el('div', 'leer', q ? 'Nichts gefunden.' : 'Der Ordner ist leer. Rechtsklick: neuer Ordner.')); return; }
+    const server = page === 'server';
     list.slice(0, 500).forEach((f) => {
       const lk = el('button', 'lk', 'Verknüpfen'); lk.type = 'button'; lk.hidden = !canWrite; lk.addEventListener('click', () => openLink(f.path));
-      box.append(fileRow(f.ordner ? '📁' : '📄', f.name, [f.ordner ? '' : fmtGr(f.groesse), f.geaendert ? new Date(f.geaendert).toLocaleDateString('de-CH') : ''],
-        () => (f.ordner ? showOrdner(f.path) : openFile(f.path)), [lk]));
+      const row = fileRow(f.ordner ? '📁' : '📄', f.name, [f.ordner ? '' : fmtGr(f.groesse), f.geaendert ? new Date(f.geaendert).toLocaleDateString('de-CH') : ''],
+        () => (f.ordner ? showOrdner(f.path) : openFile(f.path)), [lk]);
+      row.addEventListener('contextmenu', (e) => itemMenu(e, f, row));
+      if (f.ordner && server) row.addEventListener('auxclick', (e) => { if (e.button === 1) { e.preventDefault(); newTab(f.path); } });
+      box.append(row);
     });
     if (list.length > 500) box.append(el('div', 'leer', 'Nur die ersten 500 Einträge. Filtern zeigt den Rest.'));
   };
   async function showOrdner(sub) {
     const sec = $('pordner'); const p = focusP && projects.find((x) => x.id === focusP);
     const server = page === 'server';
-    if (!NATIVE_FS || !(server || (p && p.ordner))) { sec.hidden = true; odPfad = null; return; }
+    if (!NATIVE_FS || !(server || (p && p.ordner))) { sec.hidden = true; odPfad = null; $('srvTabs').hidden = true; closeCtx(); return; }
     sec.hidden = false;
-    let root;
-    if (server) { try { root = localStorage.getItem(SRV) || 'G:\\'; } catch (_) { root = 'G:\\'; } $('pordnerT').textContent = 'Server'; }
-    else { root = p.ordner; $('pordnerT').textContent = 'Projektordner'; }
-    if (sub) odPfad = sub; else if (!odPfad || (!server && !odPfad.startsWith(root))) odPfad = root;
-    if (server) { try { localStorage.setItem(SRV, odPfad); } catch (_) {} }
-    $('pordnerPfad').value = odPfad;
+    let root = null;
+    if (server) {
+      loadTabs();
+      odPfad = sub || srvTabs[srvAkt].pfad;
+      srvTabs[srvAkt].pfad = odPfad; saveTabs();
+      $('pordnerT').textContent = 'Server';
+    } else {
+      root = p.ordner; $('pordnerT').textContent = 'Projektordner';
+      if (sub) odPfad = sub; else if (!odPfad || !odPfad.startsWith(root)) odPfad = root;
+    }
+    renderTabs();
+    endEdit(); drawCrumbs(root);
     $('pordnerUp').hidden = server ? !parentOf(odPfad) : odPfad === root;
+    $('pordnerNeu').hidden = !window.native.makeDir;
     if (sub !== undefined) $('pordnerSuch').value = '';
     const box = $('pordnerList');
+    const want = odPfad;
     const r = await window.native.listDir(odPfad);
+    if (want !== odPfad) return; // inzwischen woanders hin geklickt
     if (!r.ok) { odItems = []; box.replaceChildren(el('div', 'leer', r.error)); return; }
     odItems = r.items; drawOrdner();
   }
   $('pordnerSuch').addEventListener('input', drawOrdner);
-  $('pordnerPfad').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const v = $('pordnerPfad').value.trim().replace(/^"(.*)"$/, '$1'); if (v) showOrdner(/^[A-Za-z]:$/.test(v) ? v + '\\' : v); } });
+  $('pordnerPfad').addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); endEdit(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); const v = $('pordnerPfad').value.trim().replace(/^"(.*)"$/, '$1'); endEdit(); if (v) showOrdner(/^[A-Za-z]:$/.test(v) ? v + '\\' : v); }
+  });
   $('pordnerUp').addEventListener('click', () => { const u = parentOf(odPfad); if (u) showOrdner(u); });
   $('pordnerOpen').addEventListener('click', () => odPfad && window.native.openPath(odPfad));
+  // Maus-Zurück-Taste geht einen Ordner hoch
+  $('pordner').addEventListener('mouseup', (e) => { if (e.button === 3) { const p = focusP && projects.find((x) => x.id === focusP); const u = parentOf(odPfad); if (u && (page === 'server' || (p && u.startsWith(p.ordner)))) { e.preventDefault(); showOrdner(u); } } });
   if (window.native && window.native.pickPath) {
     $('fOrdnerPick').hidden = false;
     $('fOrdnerPick').addEventListener('click', async () => { const r = await window.native.pickPath('ordner'); if (r && r[0]) F.ordner.value = r[0]; });
