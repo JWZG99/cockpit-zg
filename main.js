@@ -13,11 +13,19 @@ const readJson = (f, fallback) => { try { return JSON.parse(fs.readFileSync(f, '
 let settings = readJson(SETTINGS, {});
 // Büro-Ordner auf dem Server: Programm und Daten liegen zusammen darin (ZG, 9.11.2026)
 const BUERO = 'G:\\03 Dokumente\\90 ZG Programm';
-const defaultDir = () => (fs.existsSync(BUERO) ? path.join(BUERO, 'Daten') : path.join(app.getPath('documents'), 'Cockpit ZG'));
+const BUERO_DATEN = path.join(BUERO, 'Cockpit Daten (alle)'); // gemeinsamer Ordner für alle Benutzer (vorher «Daten»)
+const defaultDir = () => (fs.existsSync(BUERO) ? BUERO_DATEN : path.join(app.getPath('documents'), 'Cockpit ZG'));
 const dataDir = () => settings.datenOrdner || defaultDir();
+const saveSettings = () => { try { fs.mkdirSync(path.dirname(SETTINGS), { recursive: true }); fs.writeFileSync(SETTINGS, JSON.stringify(settings, null, 1)); } catch (_) {} };
+// 2.4: old folder «Daten» becomes «Cockpit Daten (alle)»; the first PC renames it, the others just follow
+if (settings.datenOrdner === path.join(BUERO, 'Daten') && fs.existsSync(BUERO)) {
+  const alt = path.join(BUERO, 'Daten');
+  if (!fs.existsSync(BUERO_DATEN) && fs.existsSync(alt)) { try { fs.renameSync(alt, BUERO_DATEN); } catch (_) {} }
+  if (fs.existsSync(BUERO_DATEN)) { settings.datenOrdner = BUERO_DATEN; saveSettings(); }
+}
 // once the office folder has been seen, remember it, so a short G: outage does not switch to a local folder
-if (settings.datenOrdner === path.join(BUERO, 'Daten') && fs.existsSync(BUERO)) { try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); } catch (_) {} }
-if (!settings.datenOrdner && fs.existsSync(BUERO)) { settings.datenOrdner = path.join(BUERO, 'Daten'); try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); fs.mkdirSync(path.dirname(SETTINGS), { recursive: true }); fs.writeFileSync(SETTINGS, JSON.stringify(settings, null, 1)); } catch (_) {} }
+if (settings.datenOrdner === BUERO_DATEN && fs.existsSync(BUERO)) { try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); } catch (_) {} }
+if (!settings.datenOrdner && fs.existsSync(BUERO)) { settings.datenOrdner = BUERO_DATEN; try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); } catch (_) {} saveSettings(); }
 const dataFile = () => path.join(dataDir(), 'cockpit-daten.json');
 const filesDir = () => path.join(dataDir(), 'dateien');
 
