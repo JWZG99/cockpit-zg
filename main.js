@@ -257,7 +257,7 @@ ipcMain.handle('db-write', (_e, ops) => {
 });
 ipcMain.handle('data-status', () => status());
 // Contents of a folder (e.g. a project folder on G:), folders first
-ipcMain.handle('list-dir', (_e, p) => {
+const listDir = (p) => {
   p = String(p || '').trim().replace(/^"(.*)"$/, '$1');
   try {
     const items = fs.readdirSync(p, { withFileTypes: true })
@@ -272,7 +272,10 @@ ipcMain.handle('list-dir', (_e, p) => {
   } catch (e) {
     return { ok: false, error: e.code === 'ENOENT' ? 'Ordner nicht gefunden. Ist der Server verbunden?' : 'Ordner nicht lesbar.' };
   }
-});
+};
+ipcMain.handle('list-dir', (_e, p) => listDir(p));
+// Assistent (Claude) im Programm
+require('./ki')({ ipcMain, dataDir, getStore: () => store, commit, changed, me, isAdmin: () => { const m = me(); return !!m && m.rolle === 'admin'; }, listDir });
 
 const TYPES = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', txt: 'text/plain', csv: 'text/csv', md: 'text/markdown', json: 'application/json', mp4: 'video/mp4', webm: 'video/webm' };
 const findAsset = (id) => {

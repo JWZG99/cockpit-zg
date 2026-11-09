@@ -24,5 +24,10 @@ contextBridge.exposeInMainWorld('native', {
   changePassword: (alt, neu) => ipcRenderer.invoke('auth-password', { alt, neu }),
   teamList: () => ipcRenderer.invoke('team-list'),
   teamSave: (d) => ipcRenderer.invoke('team-save', d),
+  kiStatus: () => ipcRenderer.invoke('ki-status'),
+  kiSchluessel: (k) => ipcRenderer.invoke('ki-schluessel', k),
+  kiFrage: (t) => ipcRenderer.invoke('ki-frage', t),
+  kiNeu: () => ipcRenderer.invoke('ki-neu'),
+  onKiSchritt: (cb) => ipcRenderer.on('ki-schritt', (_e, n) => cb(n)),
   onAskDataDir: (cb) => ipcRenderer.on('ask-data-dir', () => cb()),
 });

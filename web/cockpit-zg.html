@@ -760,6 +760,24 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
 .prof-head b { font-size: 22px; display: block; }
 .prof-head span { color: var(--muted); font-size: 15px; }
 @media (max-width: 560px) { .prof { grid-template-columns: minmax(0, 1fr); } }
+/* Assistent (Programm) */
+#ki { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); z-index: 70; display: flex; flex-direction: column; background: var(--paper); box-shadow: -10px 0 40px rgba(0,0,0,.15); border-left: 0.5px solid var(--line); }
+#ki[hidden] { display: none; }
+.ki-head { display: flex; align-items: center; gap: 8px; padding: 14px 14px 10px; border-bottom: 0.5px solid var(--line); }
+.ki-head h2 { margin: 0; font-size: 20px; flex: 1; }
+.ki-log { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.ki-m { max-width: 92%; padding: 9px 12px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.45; }
+.ki-m.ich { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.ki-m.bot { align-self: flex-start; background: var(--fill); border-bottom-left-radius: 4px; }
+.ki-m.info { align-self: center; background: none; color: var(--muted); font-size: 13px; padding: 2px; }
+.ki-m.err { align-self: flex-start; background: none; color: var(--bad-text); font-size: 14px; }
+.ki-form { display: flex; gap: 8px; padding: 12px 14px 16px; border-top: 0.5px solid var(--line); }
+.ki-form textarea { flex: 1; resize: none; font: inherit; font-size: 15px; padding: 9px 11px; border-radius: 12px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
+.ki-setup, .ki-wait { padding: 0 14px 10px; font-size: 14px; color: var(--muted); }
+.ki-setup { display: flex; flex-direction: column; gap: 8px; }
+.ki-setup[hidden], .ki-wait[hidden] { display: none; }
+.ki-setup input { font: inherit; padding: 9px 11px; border-radius: 12px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
+.ki-err { color: var(--bad-text); margin: 0; min-height: 1em; }
 /* Mehrbenutzer (Programm): Team, Chef-Übersicht, Abmelden */
 body:not(.pg-team) #team, body:not(.pg-chef) #chef { display: none !important; }
 body.pg-team #heuteRow, body.pg-team #projekte, body.pg-chef #heuteRow, body.pg-chef #projekte { display: none !important; }
@@ -803,6 +821,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   <button type="button" class="side-it" data-pg="home"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Übersicht</span></button>
   <button type="button" class="side-it" data-pg="zeit"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Zeiterfassung</span><span class="nm" id="sideZeit"></span></button>
   <button type="button" class="side-it" data-pg="server" id="sideServer" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Server</span><span class="nm"></span></button>
+  <button type="button" class="side-it" id="sideKi" hidden aria-controls="ki" aria-expanded="false"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 9.5h7M8.5 12.5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Assistent</span><span class="nm"></span></button>
   <button type="button" class="side-it" data-pg="chef" id="sideChef" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="12" width="4" height="7.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="7" width="4" height="12.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="16.5" y="4" width="4" height="15.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span><span class="lb">Chef-Übersicht</span><span class="nm"></span></button>
   <button type="button" class="side-it" data-pg="team" id="sideTeam" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="9" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.5" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16.5 13c2.3 0 3.8 1.3 4.3 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="lb">Team</span><span class="nm"></span></button>
   <div class="side-h" id="sideProjH">Projekte</div>
@@ -986,6 +1005,19 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   <p class="datafoot" id="dataFoot" hidden><span class="dst" id="dataSt"></span>Daten: <span id="dataDir"></span> <button type="button" class="btn ghost" id="dataDirBtn">Ordner ändern …</button></p>
 </div>
 </div>
+
+<aside id="ki" hidden aria-labelledby="kiH">
+  <div class="ki-head"><h2 id="kiH">Assistent</h2><button type="button" class="btn ghost" id="kiNeu">Neuer Chat</button><button type="button" class="sx" id="kiZu" aria-label="Assistent schliessen">×</button></div>
+  <div class="ki-log" id="kiLog" aria-live="polite"></div>
+  <div class="ki-setup" id="kiSetup" hidden>
+    <p>Der Assistent braucht einen API-Schlüssel von Anthropic (console.anthropic.com → API Keys). Er gilt für alle im Büro und liegt im Datenordner auf dem Server.</p>
+    <input id="kiKey" type="password" placeholder="sk-ant-…" autocomplete="off" aria-label="API-Schlüssel">
+    <button type="button" class="btn primary" id="kiKeyGo">Schlüssel speichern</button>
+    <p class="ki-err" id="kiKeyErr"></p>
+  </div>
+  <p class="ki-wait" id="kiWait" hidden>Der Assistent ist noch nicht eingerichtet. Der Administrator hinterlegt den API-Schlüssel.</p>
+  <form class="ki-form" id="kiForm"><textarea id="kiIn" rows="2" placeholder="Frag etwas, z. B. «Was ist bei WEL überfällig?»" aria-label="Frage an den Assistenten"></textarea><button type="submit" class="btn primary" id="kiGo">Senden</button></form>
+</aside>
 
 <div id="lkScrim" hidden><div class="lkd" role="dialog" aria-modal="true" aria-labelledby="lkH">
   <h3 id="lkH">Verknüpfen mit …</h3>
@@ -4024,6 +4056,52 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       });
       lb.append(tbl);
     }
+  }
+
+  // Assistent: Chat rechts, Claude über das Programm (Schlüssel beim Administrator)
+  if (window.native && window.native.kiFrage) {
+    const K = window.native;
+    let kiBusy = false;
+    const kiAdd = (cls, t) => { const m = el('div', 'ki-m ' + cls, t); $('kiLog').append(m); $('kiLog').scrollTop = $('kiLog').scrollHeight; return m; };
+    const kiCheck = async () => {
+      const st = await K.kiStatus();
+      $('kiSetup').hidden = st.bereit || !st.darfEinrichten;
+      $('kiWait').hidden = st.bereit || st.darfEinrichten;
+      $('kiForm').hidden = !st.bereit;
+      if (st.bereit && !$('kiLog').children.length) kiAdd('info', 'Ich kenne eure Projekte, Aufgaben, deine Arbeitszeit und kann Ordner auf dem Server anschauen. Aufgaben lege ich nur an oder hake sie ab, wenn du es sagst.');
+      return st;
+    };
+    const kiOpen = (open) => {
+      $('ki').hidden = !open; $('sideKi').setAttribute('aria-expanded', String(open));
+      if (open) { kiCheck(); setTimeout(() => { if (!$('kiForm').hidden) $('kiIn').focus(); }, 50); }
+    };
+    $('sideKi').hidden = false;
+    $('sideKi').addEventListener('click', () => kiOpen($('ki').hidden));
+    $('kiZu').addEventListener('click', () => kiOpen(false));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('ki').hidden && $('lkScrim').hidden) kiOpen(false); });
+    $('kiNeu').addEventListener('click', async () => { if (kiBusy) return; await K.kiNeu(); $('kiLog').replaceChildren(); kiCheck(); });
+    $('kiKeyGo').addEventListener('click', async () => {
+      const r = await K.kiSchluessel($('kiKey').value);
+      $('kiKeyErr').textContent = r.ok ? '' : r.error;
+      if (r.ok) { $('kiKey').value = ''; kiCheck(); }
+    });
+    const SCHRITT = { projekte_liste: 'schaut die Projekte an …', aufgaben_suchen: 'sucht Aufgaben …', aufgabe_anlegen: 'legt eine Aufgabe an …', aufgabe_erledigt: 'hakt eine Aufgabe ab …', meine_zeit: 'schaut deine Zeit an …', ordner_anzeigen: 'schaut in den Ordner …' };
+    let kiStatusEl = null;
+    K.onKiSchritt((n) => { if (kiStatusEl) kiStatusEl.textContent = 'Assistent ' + (SCHRITT[n] || 'arbeitet …'); });
+    const send = async () => {
+      const t = $('kiIn').value.trim();
+      if (!t || kiBusy) return;
+      kiBusy = true; $('kiGo').disabled = true; $('kiIn').value = '';
+      kiAdd('ich', t);
+      kiStatusEl = kiAdd('info', 'Assistent denkt nach …');
+      const r = await K.kiFrage(t);
+      kiStatusEl.remove(); kiStatusEl = null;
+      if (r.ok) kiAdd('bot', r.antwort.replace(/\*\*(.+?)\*\*/g, '$1'));
+      else kiAdd('err', r.error);
+      kiBusy = false; $('kiGo').disabled = false; $('kiIn').focus();
+    };
+    $('kiForm').addEventListener('submit', (e) => { e.preventDefault(); send(); });
+    $('kiIn').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
   }
 
   if (window.native && window.native.me) {
