@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('native', {
   showInFolder: (p) => ipcRenderer.invoke('show-in-folder', p),
   makeDir: (inDir, name) => ipcRenderer.invoke('make-dir', { in: inDir, name }),
   deletePath: (p) => ipcRenderer.invoke('delete-path', p),
+  movePath: (von, nach, kopie) => ipcRenderer.invoke('move-path', { von, nach, kopie: !!kopie }),
   dataDir: () => ipcRenderer.invoke('data-dir'),
   chooseDataDir: () => ipcRenderer.invoke('choose-data-dir'),
   dataStatus: () => ipcRenderer.invoke('data-status'),

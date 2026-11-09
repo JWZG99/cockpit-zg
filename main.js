@@ -331,6 +331,31 @@ ipcMain.handle('make-dir', (_e, { in: inDir, name }) => {
   if (fs.existsSync(full)) return { ok: false, error: 'Diesen Ordner gibt es schon.' };
   try { fs.mkdirSync(full); return { ok: true, path: full }; } catch (e) { return { ok: false, error: e.code === 'EPERM' || e.code === 'EACCES' ? 'Keine Berechtigung für diesen Ordner.' : 'Ordner anlegen ging nicht.' }; }
 });
+// Verschieben (Standard) oder kopieren (Ctrl) per Ziehen auf der Seite «Server»
+ipcMain.handle('move-path', async (_e, { von, nach, kopie }) => {
+  von = cleanP(von); nach = cleanP(nach);
+  if (!von || !fs.existsSync(von)) return { ok: false, error: 'Nicht gefunden.' };
+  if (!nach || !fs.existsSync(nach) || !fs.statSync(nach).isDirectory()) return { ok: false, error: 'Zielordner nicht gefunden.' };
+  if (!kopie && geschuetzt(von)) return { ok: false, error: 'Diesen Ordner kann man nicht verschieben (Laufwerk oder Cockpit-Ordner).' };
+  const ziel = path.join(nach, path.basename(von));
+  const nv = path.resolve(von).toLowerCase(), nz = path.resolve(ziel).toLowerCase();
+  if (nv === nz) return { ok: false, error: 'Liegt schon dort.' };
+  if (nz.startsWith(nv + path.sep)) return { ok: false, error: 'Ein Ordner kann nicht in sich selbst verschoben werden.' };
+  if (fs.existsSync(ziel)) return { ok: false, error: '«' + path.basename(von) + '» gibt es im Zielordner schon.' };
+  const busy = (e) => (e.code === 'EPERM' || e.code === 'EACCES' || e.code === 'EBUSY' ? 'keine Berechtigung, oder eine Datei darin ist noch offen.' : 'Fehler ' + (e.code || ''));
+  try {
+    if (kopie) fs.cpSync(von, ziel, { recursive: true, errorOnExist: true, force: false, preserveTimestamps: true });
+    else {
+      try { fs.renameSync(von, ziel); }
+      catch (e) {
+        if (e.code !== 'EXDEV') throw e;
+        fs.cpSync(von, ziel, { recursive: true, errorOnExist: true, force: false, preserveTimestamps: true });
+        fs.rmSync(von, { recursive: true });
+      }
+    }
+  } catch (e) { return { ok: false, error: (kopie ? 'Kopieren' : 'Verschieben') + ' ging nicht: ' + busy(e) }; }
+  return { ok: true, ziel };
+});
 ipcMain.handle('delete-path', async (_e, p) => {
   p = cleanP(p);
   if (!p || !fs.existsSync(p)) return { ok: false, error: 'Nicht gefunden.' };

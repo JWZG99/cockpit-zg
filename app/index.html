@@ -212,6 +212,9 @@ body.pg-server #heuteRow, body.pg-server #projekte { display: none !important; }
 .ctx button:hover, .ctx button:focus-visible { background: var(--accent, #0a84ff); color: #fff; outline: none; }
 .ctx button.bad { color: var(--bad, #c0392b); }
 .ctx button.bad:hover, .ctx button.bad:focus-visible { background: var(--bad, #c0392b); color: #fff; }
+#pordner .fit.drop, .stabs .tab.drop, #pordner .crumbs button.drop { background: color-mix(in srgb, var(--accent, #0a84ff) 18%, transparent); outline: 2px solid var(--accent, #0a84ff); outline-offset: -2px; }
+#pordner .fit[draggable="true"] { -webkit-user-drag: element; }
+#pordnerMsg .lk { font: inherit; font-weight: 600; color: var(--accent, #0a84ff); background: none; border: 0; cursor: pointer; padding: 0 4px; }
 .ctx hr { border: 0; border-top: 1px solid var(--line, rgba(0,0,0,.1)); margin: 4px 6px; }
 
 .grid.movable .card-head { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -3824,6 +3827,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       if (srvTabs.length > 1) { const x = el('span', 'x', '×'); x.setAttribute('role', 'button'); x.setAttribute('aria-label', 'Tab schliessen'); x.addEventListener('click', (e) => { e.stopPropagation(); closeTab(i); }); b.append(x); }
       b.addEventListener('click', () => { if (i !== srvAkt) { srvAkt = i; saveTabs(); showOrdner(); } });
       b.addEventListener('auxclick', (e) => { if (e.button === 1 && srvTabs.length > 1) { e.preventDefault(); closeTab(i); } });
+      dropZiel(b, () => srvTabs[i] && srvTabs[i].pfad, () => { if (i !== srvAkt && dragItem) { srvAkt = i; saveTabs(); showOrdner(); } });
       bar.append(b);
     });
     const plus = el('button', 'plus', '+'); plus.type = 'button'; plus.title = 'Neuer Tab'; plus.setAttribute('aria-label', 'Neuer Tab');
@@ -3855,6 +3859,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       if (i) nav.append(el('span', 'sep', '›'));
       const b = el('button', '', t.name); b.type = 'button'; b.title = t.pfad;
       b.addEventListener('click', (e) => { e.stopPropagation(); showOrdner(t.pfad); });
+      dropZiel(b, t.pfad, null);
       nav.append(b);
     });
     nav.append(el('span', 'rest'));
@@ -3950,6 +3955,44 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   }
   $('pordnerNeu').addEventListener('click', neuerOrdner);
 
+  // Ziehen und Ablegen: Datei/Ordner auf einen Ordner, einen Tab oder einen Teil des Pfads ziehen = verschieben (mit Ctrl: kopieren)
+  let dragItem = null;
+  const msgUndo = (text, undo) => {
+    const m = $('pordnerMsg'); clearTimeout(fMsg.t); m.replaceChildren(document.createTextNode(text + ' '));
+    if (undo) { const u = el('button', 'lk', 'Rückgängig'); u.type = 'button'; u.addEventListener('click', () => { m.textContent = ''; undo(); }); m.append(u); }
+    fMsg.t = setTimeout(() => { m.textContent = ''; }, 12000);
+  };
+  const verschieben = async (item, nach, kopie) => {
+    const von = item.path, alt = parentOf(von);
+    const r = await window.native.movePath(von, nach, kopie);
+    if (!r.ok) { fMsg(r.error); return; }
+    msgUndo('«' + item.name + '» ' + (kopie ? 'kopiert' : 'verschoben') + ' nach ' + tabName(nach) + '.', kopie ? null : async () => {
+      const z = await window.native.movePath(r.ziel, alt, false);
+      fMsg(z.ok ? 'Rückgängig gemacht.' : z.error); showOrdner(odPfad);
+    });
+    showOrdner(odPfad);
+  };
+  const dropZiel = (node, pfad, onHover) => {
+    let t = null;
+    const leave = () => { node.classList.remove('drop'); clearTimeout(t); t = null; };
+    node.addEventListener('dragover', (e) => {
+      if (!dragItem || !window.native.movePath) return;
+      const ziel = typeof pfad === 'function' ? pfad() : pfad;
+      const norm = (x) => String(x || '').replace(/[\\/]+$/, '').toLowerCase();
+      if (!ziel || norm(ziel) === norm(dragItem.path) || norm(ziel).startsWith(norm(dragItem.path) + '\\') || (norm(parentOf(dragItem.path)) === norm(ziel) && !e.ctrlKey)) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = e.ctrlKey ? 'copy' : 'move';
+      node.classList.add('drop');
+      if (onHover && !t) t = setTimeout(onHover, 700);
+    });
+    node.addEventListener('dragleave', (e) => { if (!node.contains(e.relatedTarget)) leave(); });
+    node.addEventListener('drop', (e) => {
+      leave(); if (!dragItem) return; e.preventDefault(); e.stopPropagation();
+      const it = dragItem; dragItem = null;
+      verschieben(it, typeof pfad === 'function' ? pfad() : pfad, e.ctrlKey);
+    });
+  };
+  document.addEventListener('dragend', () => { dragItem = null; document.querySelectorAll('.drop').forEach((x) => x.classList.remove('drop')); });
+
   const drawOrdner = () => {
     const box = $('pordnerList'); box.replaceChildren();
     const q = $('pordnerSuch').value.trim().toLowerCase();
@@ -3961,6 +4004,11 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       const row = fileRow(f.ordner ? '📁' : '📄', f.name, [f.ordner ? '' : fmtGr(f.groesse), f.geaendert ? new Date(f.geaendert).toLocaleDateString('de-CH') : ''],
         () => (f.ordner ? showOrdner(f.path) : openFile(f.path)), [lk]);
       row.addEventListener('contextmenu', (e) => itemMenu(e, f, row));
+      if (window.native.movePath) {
+        row.draggable = true;
+        row.addEventListener('dragstart', (e) => { dragItem = f; closeCtx(); e.dataTransfer.effectAllowed = 'copyMove'; try { e.dataTransfer.setData('text/plain', f.path); } catch (_) {} });
+        if (f.ordner) dropZiel(row, f.path, null);
+      }
       if (f.ordner && server) row.addEventListener('auxclick', (e) => { if (e.button === 1) { e.preventDefault(); newTab(f.path); } });
       box.append(row);
     });
