@@ -1,5 +1,5 @@
 // Bridge between the page and the desktop side; the page builds window.claude on top of it (app/claude-shim.js)
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('native', {
   dbAll: () => ipcRenderer.invoke('db-all'),
@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('native', {
   chooseDataDir: () => ipcRenderer.invoke('choose-data-dir'),
   dataStatus: () => ipcRenderer.invoke('data-status'),
   onDataStatus: (cb) => ipcRenderer.on('data-status', (_e, st) => cb(st)),
+  pathOf: (file) => { try { return webUtils.getPathForFile(file) || ''; } catch (_) { return ''; } },
   listDir: (p) => ipcRenderer.invoke('list-dir', p),
   onAskDataDir: (cb) => ipcRenderer.on('ask-data-dir', () => cb()),
 });
