@@ -23,6 +23,33 @@ if (settings.datenOrdner === path.join(BUERO, 'Daten') && fs.existsSync(BUERO)) 
   if (!fs.existsSync(BUERO_DATEN) && fs.existsSync(alt)) { try { fs.renameSync(alt, BUERO_DATEN); } catch (_) {} }
   if (fs.existsSync(BUERO_DATEN)) { settings.datenOrdner = BUERO_DATEN; saveSettings(); }
 }
+// 2.5.1: ZG's rule: on G: only inside BUERO. A data folder chosen earlier elsewhere on G: (e.g. G:\ itself) moves into BUERO_DATEN;
+// only the Cockpit's own files are moved, nothing else in that folder is touched.
+const aufG = (p) => /^g:/i.test(String(p || ''));
+const inBuero = (p) => { const n = path.resolve(p).toLowerCase(), b = path.resolve(BUERO).toLowerCase(); return n === b || n.startsWith(b + path.sep); };
+const zuegeln = (alt, neu) => {
+  const mv = (name, ok) => {
+    const a = path.join(alt, name), z = path.join(neu, name);
+    try {
+      if (!fs.existsSync(a) || (ok && !ok(a))) return;
+      // the folder in use until now is the current one; an older copy at the target is kept aside, not overwritten
+      if (fs.existsSync(z)) fs.renameSync(z, z.replace(/(\.json)?$/, '-vorher-' + Date.now() + '$1'));
+      fs.renameSync(a, z);
+    } catch (_) {}
+  };
+  try { fs.mkdirSync(neu, { recursive: true }); } catch (_) { return; }
+  const nurCockpit = (re) => (d) => { try { const n = fs.readdirSync(d); return n.length > 0 && n.every((f) => re.test(f)); } catch (_) { return false; } };
+  mv('daten', nurCockpit(/^[a-z0-9_.%^-]+\.json$|\.tmp$/i));
+  const istDatei = /^[a-f0-9]{32}\.[a-z0-9]+$/i, dA = path.join(alt, 'dateien'), dZ = path.join(neu, 'dateien');
+  if (nurCockpit(istDatei)(dA)) {
+    try { fs.mkdirSync(dZ, { recursive: true }); fs.readdirSync(dA).forEach((f) => { try { if (!fs.existsSync(path.join(dZ, f))) fs.renameSync(path.join(dA, f), path.join(dZ, f)); } catch (_) {} }); fs.rmdirSync(dA); } catch (_) {}
+  }
+  ['ki-schluessel.json', 'cockpit-daten.json', 'cockpit-daten-bis-1.4.json'].forEach((f) => mv(f));
+};
+if (settings.datenOrdner && aufG(settings.datenOrdner) && fs.existsSync(BUERO) && !inBuero(settings.datenOrdner)) {
+  zuegeln(settings.datenOrdner, BUERO_DATEN);
+  settings.datenOrdnerAlt = settings.datenOrdner; settings.datenOrdner = BUERO_DATEN; saveSettings();
+}
 // once the office folder has been seen, remember it, so a short G: outage does not switch to a local folder
 if (settings.datenOrdner === BUERO_DATEN && fs.existsSync(BUERO)) { try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); } catch (_) {} }
 if (!settings.datenOrdner && fs.existsSync(BUERO)) { settings.datenOrdner = BUERO_DATEN; try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); } catch (_) {} saveSettings(); }
@@ -372,6 +399,7 @@ ipcMain.handle('choose-data-dir', async () => {
   if (users().length && (!m || m.rolle !== 'admin')) return dataDir(); // only the administrator moves the data
   const r = await dialog.showOpenDialog(win, { title: 'Ordner für die Cockpit-Daten wählen (z. B. auf dem Server)', properties: ['openDirectory', 'createDirectory'] });
   if (r.canceled || !r.filePaths[0]) return dataDir();
+  if (aufG(r.filePaths[0]) && !inBuero(r.filePaths[0])) { await dialog.showMessageBox(win, { type: 'info', message: 'Auf G: nur im Ordner «90 ZG Programm».', detail: 'Bitte einen Ordner in ' + BUERO + ' wählen, damit sonst nichts auf G: abgelegt wird.' }); return dataDir(); }
   const old = { store: { ...store }, dir: dataDir() };
   settings.datenOrdner = r.filePaths[0];
   fs.writeFileSync(SETTINGS, JSON.stringify(settings, null, 1));
