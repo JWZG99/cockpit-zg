@@ -778,6 +778,10 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
 .ki-setup[hidden], .ki-wait[hidden] { display: none; }
 .ki-setup input { font: inherit; padding: 9px 11px; border-radius: 12px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
 .ki-err { color: var(--bad-text); margin: 0; min-height: 1em; }
+.ki-mod { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px; color: var(--muted); border-bottom: 0.5px solid var(--line); }
+.ki-mod[hidden] { display: none; }
+.ki-mod select { flex: 1; font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 9px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
+.ki-m .wer { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
 /* Mehrbenutzer (Programm): Team, Chef-Übersicht, Abmelden */
 body:not(.pg-team) #team, body:not(.pg-chef) #chef { display: none !important; }
 body.pg-team #heuteRow, body.pg-team #projekte, body.pg-chef #heuteRow, body.pg-chef #projekte { display: none !important; }
@@ -1008,6 +1012,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
 
 <aside id="ki" hidden aria-labelledby="kiH">
   <div class="ki-head"><h2 id="kiH">Assistent</h2><button type="button" class="btn ghost" id="kiNeu">Neuer Chat</button><button type="button" class="sx" id="kiZu" aria-label="Assistent schliessen">×</button></div>
+  <label class="ki-mod" id="kiModBox" hidden><span>Modell</span><select id="kiMod"><option value="auto">Automatisch: günstig zuerst, bei Bedarf stark</option><option value="guenstig">Immer günstig (Haiku)</option><option value="stark">Immer stark (Opus)</option></select></label>
   <div class="ki-log" id="kiLog" aria-live="polite"></div>
   <div class="ki-setup" id="kiSetup" hidden>
     <p>Der Assistent braucht einen API-Schlüssel von Anthropic (console.anthropic.com → API Keys). Er gilt für alle im Büro und liegt im Datenordner auf dem Server.</p>
@@ -4068,6 +4073,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       $('kiSetup').hidden = st.bereit || !st.darfEinrichten;
       $('kiWait').hidden = st.bereit || st.darfEinrichten;
       $('kiForm').hidden = !st.bereit;
+      $('kiModBox').hidden = !(st.bereit && st.darfEinrichten); if (st.modus) $('kiMod').value = st.modus;
       if (st.bereit && !$('kiLog').children.length) kiAdd('info', 'Ich kenne eure Projekte, Aufgaben, deine Arbeitszeit und kann Ordner auf dem Server anschauen. Aufgaben lege ich nur an oder hake sie ab, wenn du es sagst.');
       return st;
     };
@@ -4085,7 +4091,8 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       $('kiKeyErr').textContent = r.ok ? '' : r.error;
       if (r.ok) { $('kiKey').value = ''; kiCheck(); }
     });
-    const SCHRITT = { projekte_liste: 'schaut die Projekte an …', aufgaben_suchen: 'sucht Aufgaben …', aufgabe_anlegen: 'legt eine Aufgabe an …', aufgabe_erledigt: 'hakt eine Aufgabe ab …', meine_zeit: 'schaut deine Zeit an …', ordner_anzeigen: 'schaut in den Ordner …' };
+    $('kiMod').addEventListener('change', async () => { const r = await K.kiModus($('kiMod').value); if (!r.ok) kiAdd('err', r.error); });
+    const SCHRITT = { staerkeres_modell: 'übergibt an das stärkere Modell …', projekte_liste: 'schaut die Projekte an …', aufgaben_suchen: 'sucht Aufgaben …', aufgabe_anlegen: 'legt eine Aufgabe an …', aufgabe_erledigt: 'hakt eine Aufgabe ab …', meine_zeit: 'schaut deine Zeit an …', ordner_anzeigen: 'schaut in den Ordner …' };
     let kiStatusEl = null;
     K.onKiSchritt((n) => { if (kiStatusEl) kiStatusEl.textContent = 'Assistent ' + (SCHRITT[n] || 'arbeitet …'); });
     const send = async () => {
@@ -4096,7 +4103,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       kiStatusEl = kiAdd('info', 'Assistent denkt nach …');
       const r = await K.kiFrage(t);
       kiStatusEl.remove(); kiStatusEl = null;
-      if (r.ok) kiAdd('bot', r.antwort.replace(/\*\*(.+?)\*\*/g, '$1'));
+      if (r.ok) { const m = kiAdd('bot', r.antwort.replace(/\*\*(.+?)\*\*/g, '$1')); if (r.modell) m.append(el('span', 'wer', /opus/.test(r.modell) ? 'Opus (stark)' : 'Haiku (günstig)')); }
       else kiAdd('err', r.error);
       kiBusy = false; $('kiGo').disabled = false; $('kiIn').focus();
     };

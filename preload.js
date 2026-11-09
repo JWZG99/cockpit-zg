@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('native', {
   kiStatus: () => ipcRenderer.invoke('ki-status'),
   kiSchluessel: (k) => ipcRenderer.invoke('ki-schluessel', k),
   kiFrage: (t) => ipcRenderer.invoke('ki-frage', t),
+  kiModus: (m) => ipcRenderer.invoke('ki-modus', m),
   kiNeu: () => ipcRenderer.invoke('ki-neu'),
   onKiSchritt: (cb) => ipcRenderer.on('ki-schritt', (_e, n) => cb(n)),
   onAskDataDir: (cb) => ipcRenderer.on('ask-data-dir', () => cb()),
