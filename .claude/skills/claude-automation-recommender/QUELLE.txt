@@ -1,0 +1,2 @@
+Quelle: https://github.com/anthropics/claude-plugins-official/tree/0412be76f50ab4f4f8abff3753efa9269fbbca5b/plugins/claude-code-setup
+Plugin claude-code-setup v1.0.0 von Anthropic (Apache-2.0), unveraendert uebernommen.
