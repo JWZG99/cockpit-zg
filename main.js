@@ -11,7 +11,13 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: t
 const SETTINGS = path.join(app.getPath('userData'), 'einstellungen.json');
 const readJson = (f, fallback) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return fallback; } };
 let settings = readJson(SETTINGS, {});
-const dataDir = () => settings.datenOrdner || path.join(app.getPath('documents'), 'Cockpit ZG');
+// Büro-Ordner auf dem Server: Programm und Daten liegen zusammen darin (ZG, 9.11.2026)
+const BUERO = 'G:\\03 Dokumente\\90 ZG Programm';
+const defaultDir = () => (fs.existsSync(BUERO) ? path.join(BUERO, 'Daten') : path.join(app.getPath('documents'), 'Cockpit ZG'));
+const dataDir = () => settings.datenOrdner || defaultDir();
+// once the office folder has been seen, remember it, so a short G: outage does not switch to a local folder
+if (settings.datenOrdner === path.join(BUERO, 'Daten') && fs.existsSync(BUERO)) { try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); } catch (_) {} }
+if (!settings.datenOrdner && fs.existsSync(BUERO)) { settings.datenOrdner = path.join(BUERO, 'Daten'); try { fs.mkdirSync(settings.datenOrdner, { recursive: true }); fs.mkdirSync(path.dirname(SETTINGS), { recursive: true }); fs.writeFileSync(SETTINGS, JSON.stringify(settings, null, 1)); } catch (_) {} }
 const dataFile = () => path.join(dataDir(), 'cockpit-daten.json');
 const filesDir = () => path.join(dataDir(), 'dateien');
 
