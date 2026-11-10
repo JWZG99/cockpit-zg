@@ -766,6 +766,10 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
 .side-prof .who b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-prof .who span { font-size: 12px; color: var(--muted); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-h { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 16px 10px 4px; }
+body.side-ziehen #sideProjH, body.side-ziehen #sideMehrH { display: flex !important; }
+.side-drop { background: color-mix(in srgb, var(--accent) 14%, transparent); outline: 2px dashed var(--accent); outline-offset: -2px; border-radius: 10px; }
+#sideProj:empty { min-height: 6px; } body.side-ziehen #sideProj:empty { min-height: 40px; }
+.side-it[draggable="true"] { -webkit-user-drag: element; }
 .side-mehr { display: flex; gap: 6px; align-items: center; width: calc(100% - 20px); background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; text-align: left; }
 .side-mehr::before { content: '›'; display: inline-block; font-size: 15px; transition: transform .15s; }
 .side-mehr[aria-expanded="true"]::before { transform: rotate(90deg); }
@@ -3873,9 +3877,30 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     const lb = el('span', 'lb', (lang && p.nummer ? p.nummer + ' ' : '') + (p.name || p.id));
     if (lang && p.titel) lb.append(el('small', '', p.titel));
     b.append(d, lb, el('span', 'nm', n ? String(n) : (ruhend(p) ? STATUS_NAME[p.status] : '')));
-    b.title = (p.nummer ? p.nummer + ' ' : '') + (p.name || p.id) + (p.titel ? ' · ' + p.titel : '') + (n ? ' · ' + n + ' offen' : '') + (ruhend(p) ? ' · ' + STATUS_NAME[p.status] : '');
+    b.title = (p.nummer ? p.nummer + ' ' : '') + (p.name || p.id) + (p.titel ? ' · ' + p.titel : '') + (n ? ' · ' + n + ' offen' : '') + (ruhend(p) ? ' · ' + STATUS_NAME[p.status] : '') + ' · ziehen: zu «Meine Projekte» oder zurück';
+    if (IST && db) {
+      b.draggable = true;
+      b.addEventListener('dragstart', (e) => { sideDrag = p; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', p.id); } catch (_) {} document.body.classList.add('side-ziehen'); });
+      b.addEventListener('dragend', () => { sideDrag = null; document.body.classList.remove('side-ziehen'); document.querySelectorAll('.side-drop').forEach((x) => x.classList.remove('side-drop')); });
+    }
     return b;
   };
+  // Ziehen in der Leiste: auf «Meine Projekte» = ich arbeite daran (ruhende Projekte werden dabei wieder «Läuft»), auf «Weitere Projekte» = austragen
+  let sideDrag = null;
+  const meinSetzen = async (p, rein) => {
+    const alt = Array.isArray(p.mitglieder) ? p.mitglieder : [];
+    const neu = alt.filter((x) => x !== IST.id).concat(rein ? [IST.id] : []);
+    const data = { mitglieder: neu };
+    if (rein && p.status === 'inaktiv') data.status = 'aktiv';
+    try { await db.doc('projekte/' + p.id).update(data); } catch (_) {}
+  };
+  const sideZiel = (zonen, rein) => zonen.forEach((z) => {
+    z.addEventListener('dragover', (e) => { if (!sideDrag) return; const ist = meinP(sideDrag); if (rein === ist) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; zonen.forEach((x) => x.classList.add('side-drop')); });
+    z.addEventListener('dragleave', (e) => { if (!zonen.some((x) => x.contains(e.relatedTarget))) zonen.forEach((x) => x.classList.remove('side-drop')); });
+    z.addEventListener('drop', (e) => { if (!sideDrag) return; e.preventDefault(); const p = sideDrag; sideDrag = null; zonen.forEach((x) => x.classList.remove('side-drop')); meinSetzen(p, rein); });
+  });
+  sideZiel([$('sideProjH'), $('sideProj')], true);
+  sideZiel([$('sideMehrH'), $('sideMehr')], false);
   // Suche oben links: Nummer, Kürzel, Adresse, Gemeinde, Titel – über alle Projekte und Studien
   const sucheZeigen = () => {
     const q = $('sideSuch').value.trim().toLowerCase(), box = $('sideTreffer');
