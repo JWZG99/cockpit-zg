@@ -524,6 +524,31 @@ ipcMain.handle('update-installieren', () => {
   setTimeout(() => app.quit(), 600);
   return { ok: true };
 });
+// Eigene Programmdatei geändert (neue Version direkt auf diesen PC gelegt)? Dann der Seite melden; sie startet nach einem
+// Countdown neu. Dazu ein Knopf «Aktualisieren» oben rechts: Daten neu von G: lesen und Seite neu laden (ZG, 10.11.2026)
+const ofs = require('original-fs');
+const ASAR = path.join(process.resourcesPath || __dirname, 'app.asar');
+const asarStempel = () => { try { const st = ofs.statSync(ASAR); return st.mtimeMs + ':' + st.size; } catch (_) { return null; } };
+const asarStart = app.isPackaged ? asarStempel() : null;
+let asarLetzt = asarStart, asarGemeldet = false;
+setInterval(() => {
+  if (!asarStart || asarGemeldet) return;
+  const jetzt = asarStempel();
+  // erst melden, wenn die Datei zweimal hintereinander gleich ist (fertig kopiert)
+  if (jetzt && jetzt !== asarStart && jetzt === asarLetzt) { asarGemeldet = true; if (win && !win.isDestroyed()) win.webContents.send('neue-version-lokal'); }
+  asarLetzt = jetzt;
+}, 15000);
+ipcMain.handle('neu-starten', () => { app.relaunch(); setTimeout(() => app.exit(0), 100); return true; });
+ipcMain.handle('neu-laden', () => {
+  if (asarStart && asarStempel() !== asarStart) { app.relaunch(); setTimeout(() => app.exit(0), 100); return { neustart: true }; }
+  try { if (reachable()) { const r = loadAll(); if (r !== false) { online = true; if (pending.length) reconnect(); } } } catch (_) {}
+  try { bautenAbgleich(); } catch (_) {}
+  sendStatus();
+  if (win && !win.isDestroyed()) setTimeout(() => win.webContents.reload(), 50);
+  return { ok: true };
+});
+ipcMain.handle('version', () => app.getVersion());
+
 const updPruefen = () => { try { const v = upd.bereit(); if (v && v !== updGemeldet) { updGemeldet = v; if (win && !win.isDestroyed()) win.webContents.send('update-bereit', v); } } catch (_) {} };
 setInterval(updPruefen, 5 * 60 * 1000);
 
