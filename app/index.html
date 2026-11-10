@@ -822,8 +822,21 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
 .ki-mod select { flex: 1; font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 9px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
 .ki-m .wer { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
 /* Mehrbenutzer (Programm): Team, Chef-Übersicht, Abmelden */
-body:not(.pg-team) #team, body:not(.pg-chef) #chef { display: none !important; }
-body.pg-team #heuteRow, body.pg-team #projekte, body.pg-chef #heuteRow, body.pg-chef #projekte { display: none !important; }
+body:not(.pg-team) #team, body:not(.pg-chef) #chef, body:not(.pg-wahl) #wahl { display: none !important; }
+body.pg-team #heuteRow, body.pg-team #projekte, body.pg-chef #heuteRow, body.pg-chef #projekte, body.pg-wahl #heuteRow, body.pg-wahl #projekte { display: none !important; }
+#wahl { max-width: 900px; }
+#wahlMsg { font-size: 13px; color: var(--muted); margin: 10px 0 0; min-height: 1.2em; }
+.wahl-box { display: block; max-width: none; }
+.wahl-fuer { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; color: var(--muted); }
+.wahl-fuer select { font: inherit; font-size: 15px; padding: 6px 10px; border-radius: 10px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
+.wahl-it { display: grid; grid-template-columns: 22px 12px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 4px; border-top: 0.5px solid var(--line); cursor: pointer; font-size: 15px; }
+.wahl-it:first-child { border-top: 0; }
+.wahl-it input { width: 20px; height: 20px; margin: 0; }
+.wahl-it .pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc, var(--muted)); }
+.wahl-it .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wahl-it .t small { color: var(--muted); margin-left: 6px; }
+.wahl-it .w { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.side-wahl .lb { color: var(--muted); }
 body.r-mitarbeiter #pDelete { display: none !important; }
 .side-foot { margin-top: auto; padding: 12px 6px 4px; display: flex; flex-direction: column; gap: 8px; }
 .side-as { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
@@ -869,6 +882,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   <button type="button" class="side-it" data-pg="team" id="sideTeam" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="9" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.5" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16.5 13c2.3 0 3.8 1.3 4.3 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="lb">Team</span><span class="nm"></span></button>
   <div class="side-h" id="sideProjH">Projekte</div>
   <div id="sideProj"></div>
+  <button type="button" class="side-it side-wahl" data-pg="wahl" id="sideWahl"><span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 17l2 2 3-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lb">Projekte wählen</span><span class="nm"></span></button>
   <div class="side-foot" id="sideFoot" hidden>
     <label class="side-as" id="sideAsBox" hidden><span>Ansicht als</span><select id="sideAs"><option value="mitarbeiter">Mitarbeiter</option><option value="chef">Chef</option><option value="admin">Administrator</option></select></label>
     <button type="button" class="btn ghost" id="sideOut">Abmelden</button>
@@ -913,6 +927,15 @@ body.r-mitarbeiter #pDelete { display: none !important; }
         <label class="tm-akt"><input type="checkbox" id="tmAktiv" checked> Aktiv (kann sich anmelden)</label>
         <div class="pw-row"><button type="button" class="btn primary" id="tmSave">Speichern</button><button type="button" class="btn ghost" id="tmNew">Neue Person</button><span class="hint" id="tmMsg" aria-live="polite"></span></div>
       </div>
+    </div>
+  </section>
+
+  <section id="wahl" aria-labelledby="wahlTitle">
+    <div class="sec-head"><h2 id="wahlTitle">Projekte wählen</h2><span class="hint">Alle Projekte des Büros. Hake an, an welchen Projekten gearbeitet wird; nur diese erscheinen links und in der Übersicht.</span></div>
+    <div class="cb prof wahl-box">
+      <div class="wahl-fuer" id="wahlFuerBox" hidden><label for="wahlFuer">Für</label><select id="wahlFuer"></select></div>
+      <div id="wahlList"></div>
+      <p class="hint" id="wahlMsg" aria-live="polite"></p>
     </div>
   </section>
 
@@ -1463,7 +1486,12 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   let assets = null, tEditing = null, tImgs = [], tAdded = [], tUploads = 0;
   let projects = [], tasks = [], termine = [], loaded = false, view = 'karten';
   // alle Aufgaben (nur Chef/Administrator bekommen fremde überhaupt), «tasks» = nur die eigenen (ZG, 10.11.2026)
-  let allTasks = [], IST = null;
+  let allTasks = [], IST = null, allProjects = [];
+  // Projekte sind global; jeder sieht in seinen Ansichten nur die, die er unter «Projekte wählen» angehakt hat.
+  // Chef/Administrator ohne Auswahl sehen alle.
+  const istBoss = () => !!IST && (IST.rolle === 'chef' || IST.rolle === 'admin');
+  const dabei = (p, id) => Array.isArray(p.mitglieder) && p.mitglieder.includes(id);
+  const meinP = (p) => !IST || dabei(p, IST.id) || (istBoss() && !allProjects.some((x) => dabei(x, IST.id)));
   const eigen = (x) => !IST || (x.von ? x.von === IST.id : IST.rolle === 'admin');
   const showDone = new Set(), addArt = {};
 
@@ -1929,14 +1957,20 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     const code = F.code.value.trim();
     if (!code) { $('pErr').textContent = 'Gib ein Kürzel ein, z. B. HOL.'; return; }
     const data = { name: code, titel: F.titel.value.trim(), phase: F.phase.value, status: F.status.value, verantwortlich: F.verant.value.trim(), ordner: F.ordner.value.trim().replace(/^"(.*)"$/, '$1'), farbe: pFarbe };
-    if (!$('fMitBox').hidden) data.mitglieder = [...$('fMit').querySelectorAll('input:checked')].map((c) => c.value);
+    if (!$('fMitBox').hidden) {
+      const gezeigt = new Set([...$('fMit').querySelectorAll('input')].map((c) => c.value));
+      const rest = (editing && Array.isArray(editing.mitglieder) ? editing.mitglieder : []).filter((x) => !gezeigt.has(x));
+      data.mitglieder = rest.concat([...$('fMit').querySelectorAll('input:checked')].map((c) => c.value));
+    }
     $('pSave').disabled = true;
     try {
       if (editing) await db.doc('projekte/' + editing.id).update(data);
       else {
         let id = code.normalize('NFD').replace(/[^\w-]/g, '').toUpperCase() || 'P';
-        if (projects.some((p) => p.id === id)) id += '-' + Date.now().toString(36);
-        await db.doc('projekte/' + id).set({ ...data, reihenfolge: projects.reduce((m, p) => Math.max(m, p.reihenfolge || 0), 0) + 1 });
+        if (allProjects.some((p) => p.id === id)) id += '-' + Date.now().toString(36);
+        if (IST && !data.mitglieder) data.mitglieder = [];
+        if (IST && !data.mitglieder.includes(IST.id)) data.mitglieder.push(IST.id);
+        await db.doc('projekte/' + id).set({ ...data, reihenfolge: allProjects.reduce((m, p) => Math.max(m, p.reihenfolge || 0), 0) + 1 });
       }
       closePanel();
     } catch (e) { $('pErr').textContent = 'Speichern hat nicht geklappt. Prüfe die Verbindung und versuch es nochmals.'; }
@@ -3035,8 +3069,8 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       try {
         if (n.kind === 'c') {
           let id = text.normalize('NFD').replace(/[^\w-]/g, '').toUpperCase() || 'P';
-          if (projects.some((p) => p.id === id)) id += '-' + Date.now().toString(36);
-          await db.doc('projekte/' + id).set({ name: text, titel: '', phase: '', status: 'aktiv', termin: '', terminText: '', notiz: '', reihenfolge: projects.reduce((m, p) => Math.max(m, p.reihenfolge || 0), 0) + 1, mm: off });
+          if (allProjects.some((p) => p.id === id)) id += '-' + Date.now().toString(36);
+          await db.doc('projekte/' + id).set({ name: text, titel: '', phase: '', status: 'aktiv', termin: '', terminText: '', notiz: '', reihenfolge: allProjects.reduce((m, p) => Math.max(m, p.reihenfolge || 0), 0) + 1, mm: off, mitglieder: IST ? [IST.id] : [] });
         } else if (n.kind === 'p') {
           await db.collection('aufgaben').add({ projekt: n.p.id, text, erledigt: false, faellig: '', erstellt: new Date().toISOString(), mm: off });
         } else if (n.kind === 't' || n.kind === 's') {
@@ -3794,12 +3828,43 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (page === 'chef') { clearTimeout(window.__chefT); window.__chefT = setTimeout(renderChef, 400); }
     if (focusP) { const p = projects.find((x) => x.id === focusP); if (p) { $('projTitle').replaceChildren(document.createTextNode(p.name || p.id)); if (p.titel) $('projTitle').append(el('span', 'proj-sub', p.titel)); } }
   };
+  // «Projekte wählen»: alle Projekte, ankreuzen, an welchen man arbeitet. Chef/Administrator können es auch für andere einstellen.
+  let wahlTeam = [];
+  async function renderWahl() {
+    if (page !== 'wahl') return;
+    const list = $('wahlList'); const fuer = $('wahlFuer');
+    if (istBoss() && window.native && window.native.teamList && !wahlTeam.length) {
+      try { wahlTeam = (await window.native.teamList()).filter((u) => u.aktiv !== false).sort((a, b) => a.name.localeCompare(b.name, 'de')); } catch (_) {}
+      fuer.replaceChildren(); wahlTeam.forEach((u) => { const o = document.createElement('option'); o.value = u.id; o.textContent = u.name + (u.id === IST.id ? ' (ich)' : ''); fuer.append(o); });
+      fuer.value = IST.id;
+    }
+    $('wahlFuerBox').hidden = !(istBoss() && wahlTeam.length > 1);
+    const wer = (istBoss() && fuer.value) || (IST && IST.id);
+    list.replaceChildren();
+    if (!allProjects.length) { list.append(el('p', 'leer', 'Noch keine Projekte. Neue Projekte eröffnen der Administrator oder der Chef.')); return; }
+    const name = (id) => { const u = wahlTeam.find((x) => x.id === id); return u ? u.kuerzel || u.name : null; };
+    allProjects.forEach((p) => {
+      const l = el('label', 'wahl-it'); const c = document.createElement('input'); c.type = 'checkbox'; c.checked = dabei(p, wer);
+      const d = el('span', 'pdot'); const fc = farbeOf(p); if (fc) d.style.setProperty('--pc', fc);
+      const t = el('span', 't', p.name || p.id); if (p.titel) t.append(el('small', '', p.titel));
+      const andere = (Array.isArray(p.mitglieder) ? p.mitglieder : []).map(name).filter(Boolean);
+      l.append(c, d, t, el('span', 'w', andere.join(', ')));
+      c.addEventListener('change', async () => {
+        const alt = Array.isArray(p.mitglieder) ? p.mitglieder : [];
+        const neu = alt.filter((x) => x !== wer).concat(c.checked ? [wer] : []);
+        try { await db.doc('projekte/' + p.id).update({ mitglieder: neu }); $('wahlMsg').textContent = (p.name || p.id) + (c.checked ? ' hinzugefügt.' : ' entfernt.'); }
+        catch (_) { c.checked = !c.checked; $('wahlMsg').textContent = 'Speichern ging nicht.'; }
+      });
+      list.append(l);
+    });
+  }
+  $('wahlFuer').addEventListener('change', renderWahl);
   const setPage = (pg) => {
     const wasP = !!focusP;
     page = pg || 'home';
     if ((page === 'team' || page === 'chef') && !bossView()) page = 'home';
     focusP = page.startsWith('p:') ? page.slice(2) : null;
-    document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server', 'pg-team', 'pg-chef');
+    document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server', 'pg-team', 'pg-chef', 'pg-wahl');
     document.body.classList.add(focusP ? 'pg-projekt' : 'pg-' + page);
     try { localStorage.setItem(PK, page); } catch (_) {}
     if (focusP) {
@@ -3813,6 +3878,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     render(); renderTime(); showOrdner(); renderVerk();
     if (page === 'team') renderTeam();
     if (page === 'chef') renderChef();
+    if (page === 'wahl') renderWahl();
     window.scrollTo({ top: 0 });
   };
   // Dateien auf dem Server (nur im Programm): Projektordner, Seite «Server», Verknüpfungen mit Projekten und Aufgaben
@@ -4306,11 +4372,11 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     });
     // Projekte
     const jb = $('cbProjekte'); jb.replaceChildren();
-    if (!projects.length) jb.append(el('p', 'leer', 'Noch keine Projekte.'));
+    if (!allProjects.length) jb.append(el('p', 'leer', 'Noch keine Projekte.'));
     else {
       const tbl = el('table'); const h = el('tr'); ['Projekt', 'Phase', 'Status', 'Verantwortlich', 'Offen', 'Überfällig', 'Std. Woche'].forEach((x, i) => h.append(el('th', i >= 4 ? 'num' : '', x)));
       tbl.append(h);
-      projects.forEach((p) => {
+      allProjects.forEach((p) => {
         const mine = allTasks.filter((t) => t.projekt === p.id && !t.erledigt);
         const late = mine.filter((t) => t.faellig && t.faellig < today).length;
         const tr = el('tr', 'go'); tr.title = 'Projektseite öffnen';
@@ -4445,7 +4511,9 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     let gotP = false, gotT = false;
     const ready = () => { if (gotP && gotT) { loaded = true; render(); } };
     db.collection('projekte').orderBy('reihenfolge').onSnapshot((snap) => {
-      projects = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort((a, b) => (a.reihenfolge || 0) - (b.reihenfolge || 0));
+      allProjects = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort((a, b) => (a.reihenfolge || 0) - (b.reihenfolge || 0));
+      projects = allProjects.filter(meinP);
+      if (page === 'wahl') renderWahl();
       gotP = true; ready(); todayHook();
     }, () => { gotP = true; ready(); });
     db.collection('aufgaben').onSnapshot((snap) => {

@@ -218,8 +218,8 @@ const hashPw = (pw, salt) => crypto.scryptSync(String(pw), salt, 32).toString('h
 const newPw = (pw) => { const salt = crypto.randomBytes(16).toString('hex'); return { salt, hash: hashPw(pw, salt) }; };
 const pwOk = (u, pw) => { if (!u || !u.pw) return false; const h = Buffer.from(hashPw(pw, u.pw.salt), 'hex'); const w = Buffer.from(u.pw.hash, 'hex'); return h.length === w.length && crypto.timingSafeEqual(h, w); };
 const publicUser = (u) => ({ id: u.id, name: u.name, kuerzel: u.kuerzel || '', rolle: u.rolle || 'mitarbeiter', aktiv: u.aktiv !== false });
-// Wer sieht was (ZG, 10.11.2026): Projekte sind gemeinsam, werden aber nur vom Administrator oder Chef eröffnet; ein Mitarbeiter
-// sieht nur die Projekte, bei denen er unter «mitglieder» eingetragen ist. Aufgaben und Termine gehören der Person, die sie
+// Wer sieht was (ZG, 10.11.2026): Projekte sind global, werden nur vom Administrator oder Chef eröffnet; jeder wählt unter
+// «Projekte wählen», an welchen er arbeitet («mitglieder»), und sieht in seinen Ansichten nur diese. Aufgaben und Termine gehören der Person, die sie
 // erstellt hat («von»); sie sieht nur diese, der Chef und der Administrator sehen alle. Ältere Einträge ohne «von» gehören
 // dem Administrator. Private Daten (data/users/<id>) sieht ein Mitarbeiter nur von sich selbst.
 const PERSOENLICH = /^(aufgaben|termine)\/[^/]+$/;
@@ -229,7 +229,6 @@ const darfSehen = (k, m) => {
   if (!m) return false;
   if (m.rolle === 'chef' || m.rolle === 'admin') return true;
   if (PERSOENLICH.test(k)) return besitzer(store[k]) === m.id;
-  if (/^projekte\/[^/]+$/.test(k)) { const p = store[k] || {}; return Array.isArray(p.mitglieder) && p.mitglieder.includes(m.id); }
   if (k.startsWith('data/users/')) return k.startsWith('data/users/' + m.id + '/');
   return true;
 };
@@ -256,8 +255,13 @@ const regeln = (ops) => {
       return o;
     }
     if (/^projekte\/[^/]+$/.test(k) && !boss) {
-      if (o.kind !== 'update' || alt === undefined || !darfSehen(k, m)) return null;
-      const { mitglieder, ...rest } = o.data || {}; return { ...o, data: rest };
+      if (o.kind !== 'update' || alt === undefined) return null;
+      const altM = Array.isArray(alt.mitglieder) ? alt.mitglieder : [];
+      const { mitglieder, ...rest } = o.data || {};
+      const data = altM.includes(m.id) ? rest : {}; // andere Felder nur an eigenen Projekten
+      // in «Projekte wählen» trägt sich ein Mitarbeiter nur selbst ein oder aus
+      if (Array.isArray(mitglieder)) data.mitglieder = altM.filter((x) => x !== m.id).concat(mitglieder.includes(m.id) ? [m.id] : []);
+      return Object.keys(data).length ? { ...o, data } : null;
     }
     if (k.startsWith('data/users/') && !boss && !k.startsWith('data/users/' + m.id + '/')) return null;
     return o;
