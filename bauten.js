@@ -2,7 +2,7 @@
 // G:\01 Bauten nach Nummern\<Nummer> <Kürzel> <Adresse> <Gemeinde>   -> Projekt  (z. B. «2508 STS Im Langacher 6 Richterswil»)
 // G:\01 Bauten nach Nummern\0000 Studien\<Ordner>                     -> Studie
 // Legt fehlende Projekte an und ergänzt Nummer, Adresse, Gemeinde und Projektordner. Was im Cockpit von Hand geändert wurde
-// (Titel, Phase, Status, Farbe, Mitglieder …) bleibt. Gelöscht wird nichts.
+// (Titel, Phase, Status, Farbe, Mitglieder …) bleibt. Gelöscht wird nichts. Neue Projekte beginnen als «inaktiv».
 const fs = require('fs');
 const path = require('path');
 
@@ -59,6 +59,8 @@ const abgleichen = (store) => {
       const upd = {};
       Object.entries(felder).forEach(([f, v]) => { if (v && p[f] !== v) upd[f] = v; });
       if (!p.titel && titel) upd.titel = titel;
+      // von 2.11 automatisch angelegte Projekte standen auf «aktiv»; ZG will sie zuerst inaktiv (einmalig, 10.11.2026)
+      if (p.auto && p.erstellt && !p.statusInit) { upd.statusInit = true; if (!p.status || p.status === 'aktiv') upd.status = 'inaktiv'; }
       if (!p.name && (z.kuerzel || z.nummer)) upd.name = z.kuerzel || z.nummer;
       if (Object.keys(upd).length) ops.push({ kind: 'update', path: p.key, data: upd });
       return;
@@ -66,7 +68,7 @@ const abgleichen = (store) => {
     let id = (art === 'studie' ? 'S' : '') + (z.nummer || (z.kuerzel || ordnerName).normalize('NFD').replace(/[^\w-]/g, '').toUpperCase().slice(0, 24) || 'STUDIE');
     while (store['projekte/' + id] || neu.includes(id)) id += '-2';
     neu.push(id);
-    ops.push({ kind: 'set', path: 'projekte/' + id, data: { ...felder, name: z.kuerzel || z.nummer || ordnerName, titel: titel || (z.kuerzel ? '' : ordnerName), phase: '', status: 'aktiv', farbe: '', mitglieder: [], reihenfolge: ++reihe, erstellt: new Date().toISOString() } });
+    ops.push({ kind: 'set', path: 'projekte/' + id, data: { ...felder, name: z.kuerzel || z.nummer || ordnerName, titel: titel || (z.kuerzel ? '' : ordnerName), phase: '', status: 'inaktiv', statusInit: true, farbe: '', mitglieder: [], reihenfolge: ++reihe, erstellt: new Date().toISOString() } });
   };
   bauten.forEach((n) => eintrag(n, BAUTEN, 'bau'));
   studien.forEach((n) => eintrag(n, STUDIEN, 'studie'));

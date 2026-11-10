@@ -775,6 +775,18 @@ body { background: var(--wall), var(--bg); background-attachment: fixed; min-hei
 .side-prof .who b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-prof .who span { font-size: 12px; color: var(--muted); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-h { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 16px 10px 4px; }
+.side-mehr { display: flex; gap: 6px; align-items: center; width: calc(100% - 20px); background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; text-align: left; }
+.side-mehr::before { content: '›'; display: inline-block; font-size: 15px; transition: transform .15s; }
+.side-mehr[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side-mehr span { font-weight: 400; }
+#sideMehr .side-it { min-height: 36px; padding: 5px 10px; font-size: 14px; }
+.side-such { padding: 0 6px 8px; }
+.side-such input { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 10px; border: 0.5px solid var(--line); background: var(--fill); color: var(--fg); }
+#sideTreffer { margin: 0 0 8px; padding-bottom: 6px; border-bottom: 0.5px solid var(--line); }
+#sideTreffer .side-it { min-height: 38px; padding: 5px 10px; font-size: 14px; }
+#sideTreffer .side-it .lb small, #sideMehr .side-it .lb small { color: var(--muted); margin-left: 5px; }
+#sideTreffer .ruht .lb { color: var(--muted); }
+#sideTreffer .leer { padding: 6px 12px; font-size: 13px; color: var(--muted); }
 .side-it .pdot { width: 12px; height: 12px; border-radius: 4px; background: var(--pc, var(--idle)); justify-self: center; }
 @media (max-width: 760px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
@@ -841,6 +853,11 @@ body.pg-team #heuteRow, body.pg-team #projekte, body.pg-chef #heuteRow, body.pg-
 .wahl-it .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wahl-it .t small { color: var(--muted); margin-left: 6px; }
 .wahl-it .w { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.wahl-it { grid-template-columns: 22px 12px minmax(0, 1fr) auto auto; }
+.wahl-it.ruht .t { color: var(--muted); }
+.wahl-it select { font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 8px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
+.wahl-it .stx { font-size: 12px; color: var(--muted); }
+.wahl-filt { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .side-wahl .lb { color: var(--muted); }
 body.r-mitarbeiter #pDelete { display: none !important; }
 .side-foot { margin-top: auto; padding: 12px 6px 4px; display: flex; flex-direction: column; gap: 8px; }
@@ -879,14 +896,18 @@ body.r-mitarbeiter #pDelete { display: none !important; }
 <div class="shell">
 <nav class="side" id="side" aria-label="Bereiche">
   <button type="button" class="side-it side-prof" data-pg="profil" id="sideProf"><span class="av" id="sideAv">ZG</span><span class="who"><b id="sideName">Profil</b><span id="sideRolle">Mitarbeiter</span></span></button>
+  <div class="side-such"><input type="search" id="sideSuch" placeholder="Projekt suchen …" aria-label="Projekt suchen (Nummer, Kürzel, Adresse)" autocomplete="off" spellcheck="false"></div>
+  <div id="sideTreffer" hidden></div>
   <button type="button" class="side-it" data-pg="home"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Übersicht</span></button>
   <button type="button" class="side-it" data-pg="zeit"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Zeiterfassung</span><span class="nm" id="sideZeit"></span></button>
   <button type="button" class="side-it" data-pg="server" id="sideServer" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Server</span><span class="nm"></span></button>
   <button type="button" class="side-it" id="sideKi" hidden aria-controls="ki" aria-expanded="false"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 9.5h7M8.5 12.5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Assistent</span><span class="nm"></span></button>
   <button type="button" class="side-it" data-pg="chef" id="sideChef" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="12" width="4" height="7.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="7" width="4" height="12.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="16.5" y="4" width="4" height="15.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span><span class="lb">Chef-Übersicht</span><span class="nm"></span></button>
   <button type="button" class="side-it" data-pg="team" id="sideTeam" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="9" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.5" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16.5 13c2.3 0 3.8 1.3 4.3 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="lb">Team</span><span class="nm"></span></button>
-  <div class="side-h" id="sideProjH">Projekte</div>
+  <div class="side-h" id="sideProjH">Meine Projekte</div>
   <div id="sideProj"></div>
+  <button type="button" class="side-h side-mehr" id="sideMehrH" aria-expanded="false" hidden>Weitere Projekte <span id="sideMehrN"></span></button>
+  <div id="sideMehr" hidden></div>
   <button type="button" class="side-it side-wahl" data-pg="wahl" id="sideWahl"><span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 17l2 2 3-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lb">Projekte wählen</span><span class="nm"></span></button>
   <div class="side-foot" id="sideFoot" hidden>
     <label class="side-as" id="sideAsBox" hidden><span>Ansicht als</span><select id="sideAs"><option value="mitarbeiter">Mitarbeiter</option><option value="chef">Chef</option><option value="admin">Administrator</option></select></label>
@@ -938,7 +959,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   <section id="wahl" aria-labelledby="wahlTitle">
     <div class="sec-head"><h2 id="wahlTitle">Projekte wählen</h2><span class="hint">Alle Projekte des Büros. Hake an, an welchen Projekten gearbeitet wird; nur diese erscheinen links und in der Übersicht.</span></div>
     <div class="cb prof wahl-box">
-      <div class="wahl-fuer" id="wahlFuerBox" hidden><label for="wahlFuer">Für</label><select id="wahlFuer"></select></div>
+      <div class="wahl-fuer"><span id="wahlFuerBox" hidden><label for="wahlFuer">Für</label> <select id="wahlFuer"></select></span><label for="wahlFilt">Zeigen</label><select id="wahlFilt"><option value="alle">Alle</option><option value="laufend">Laufende</option><option value="inaktiv">Inaktive</option><option value="beendet">Beendete</option></select></div>
       <div id="wahlList"></div>
       <p class="hint" id="wahlMsg" aria-live="polite"></p>
       <div class="wahl-sync" id="wahlSyncBox" hidden><button type="button" class="btn" id="wahlSync">Jetzt mit G: abgleichen</button><span class="hint" id="wahlSyncMsg" aria-live="polite">Neue Ordner unter «G:\01 Bauten nach Nummern» werden automatisch zu Projekten (beim Start und alle 10 Minuten).</span></div>
@@ -1197,10 +1218,12 @@ body.r-mitarbeiter #pDelete { display: none !important; }
         <option value="wartet">Wartet auf andere</option>
         <option value="kritisch">Kritisch</option>
         <option value="pausiert">Pausiert</option>
+        <option value="inaktiv">Inaktiv (ausgeblendet)</option>
+        <option value="beendet">Beendet (ausgeblendet)</option>
       </select>
     </div>
     <div class="field"><span class="flabel" id="fFarbeLbl">Farbe</span><div class="swatches" id="fFarbe" role="radiogroup" aria-labelledby="fFarbeLbl"></div></div>
-    <div class="field"><label for="fVerant">Verantwortlich</label><input id="fVerant" placeholder="z. B. Name der Projektleitung"></div>
+    <div class="field"><label for="fVerant">Verantwortlich</label><select id="fVerant"><option value="">– niemand –</option></select></div>
     <div class="field"><label for="fOrdner">Projektordner auf dem Server</label><div class="pathrow"><input id="fOrdner" placeholder="z. B. G:\Projekte\HOL"><button type="button" class="btn" id="fOrdnerPick" hidden>Wählen …</button></div></div>
     <div class="field" id="fMitBox" hidden><label>Mitarbeiter in diesem Projekt</label><div class="mitl" id="fMit"></div><p class="hint">Nur angehakte Mitarbeiter sehen das Projekt. Chef und Administrator sehen alle Projekte.</p></div>
     <div class="err" id="pErr" aria-live="polite"></div>
@@ -1238,7 +1261,9 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   const TAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
   const PHASEN = ['31', '32', '33', '41', '51', '52', '53'];
   const PHASE_NAME = { 31: 'Vorprojekt', 32: 'Bauprojekt', 33: 'Bewilligungsverfahren', 41: 'Ausschreibung', 51: 'Ausführungsprojekt', 52: 'Ausführung', 53: 'Inbetriebnahme' };
-  const STATUS_NAME = { aktiv: 'Läuft', wartet: 'Wartet', kritisch: 'Kritisch', pausiert: 'Pausiert' };
+  const STATUS_NAME = { aktiv: 'Läuft', wartet: 'Wartet', kritisch: 'Kritisch', pausiert: 'Pausiert', inaktiv: 'Inaktiv', beendet: 'Beendet' };
+  // inaktive und beendete Projekte erscheinen nicht links und nicht in der Übersicht, nur unter «Projekte wählen» (ZG, 10.11.2026)
+  const ruhend = (p) => p && (p.status === 'inaktiv' || p.status === 'beendet');
   // Project colours (Apple system palette); stored as key in projekte.farbe
   const FARBEN = { blau: ['Blau', '#007aff'], tuerkis: ['Türkis', '#30b0c7'], gruen: ['Grün', '#34c759'], gelb: ['Gelb', '#ffcc00'], orange: ['Orange', '#ff9500'], rot: ['Rot', '#ff3b30'], pink: ['Pink', '#ff2d55'], violett: ['Violett', '#af52de'], indigo: ['Indigo', '#5856d6'], braun: ['Braun', '#a2845e'], grau: ['Grau', '#8e8e93'] };
   const PRIO_NAME = { 1: 'Sehr dringend', 2: 'Dringend', 3: 'Normal', 4: 'Tief' };
@@ -1505,7 +1530,10 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   const AK2 = 'cockpit-zg-art';
   let artSel = 'bau'; try { if (localStorage.getItem(AK2) === 'studie') artSel = 'studie'; } catch (_) {}
   const artOf = (p) => (p && p.art === 'studie' ? 'studie' : 'bau');
-  const meinP = (p) => !IST || dabei(p, IST.id) || (istBoss() && !allProjects.some((x) => dabei(x, IST.id)));
+  const meinP = (p) => !ruhend(p) && meinP0(p);
+  const meinP0 = (p) => !IST || dabei(p, IST.id) || (!Array.isArray(p.mitglieder) && IST.rolle === 'admin');
+  // Arbeitsmenge der Übersicht: meine laufenden Projekte der gewählten Art, dazu das gerade geöffnete Projekt
+  const arbeitsmenge = () => allProjects.filter((p) => (meinP(p) && artOf(p) === artSel) || (typeof focusP !== 'undefined' && p.id === focusP));
   const eigen = (x) => !IST || (x.von ? x.von === IST.id : IST.rolle === 'admin');
   const showDone = new Set(), addArt = {};
 
@@ -1946,6 +1974,22 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     });
     box.hidden = false;
   };
+  // Verantwortlich: Auswahl aus den Personen im Programm (Team); ein älterer, frei eingetippter Name bleibt wählbar
+  const fuellVerant = async (wert) => {
+    const sel = F.verant;
+    const setz = (namen) => {
+      sel.replaceChildren();
+      const leer = document.createElement('option'); leer.value = ''; leer.textContent = '– niemand –'; sel.append(leer);
+      const alle = [...new Set(namen.concat(wert ? [wert] : []))];
+      alle.forEach((n) => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.append(o); });
+      sel.value = wert;
+    };
+    setz([]);
+    let team = [];
+    try { if (window.native && window.native.teamList) team = (await window.native.teamList()).filter((u) => u.aktiv !== false); } catch (_) {}
+    if (!team.length && window.native && window.native.dbAll) { try { const all = await window.native.dbAll(); team = Object.keys(all).filter((k) => /^benutzer\/[^/]+$/.test(k)).map((k) => all[k]).filter((u) => u && u.aktiv !== false); } catch (_) {} }
+    if (sel.value === wert) setz(team.map((u) => u.name).filter(Boolean).sort((a, b) => a.localeCompare(b, 'de')));
+  };
   const openPanel = (p) => {
     editing = p;
     pFarbe = (p && p.farbe) || ''; drawSwatches();
@@ -1957,7 +2001,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     F.titel.value = p?.titel || '';
     F.phase.value = p?.phase || '';
     F.status.value = p?.status || '';
-    F.verant.value = p?.verantwortlich || '';
+    fuellVerant(p?.verantwortlich || '');
     F.ordner.value = p?.ordner || '';
     drawMit(p);
     $('scrim').hidden = false;
@@ -3811,7 +3855,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     artSel = a === 'studie' ? 'studie' : 'bau';
     try { localStorage.setItem(AK2, artSel); } catch (_) {}
     document.querySelectorAll('.chip[data-art]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.art === artSel)));
-    projects = allProjects.filter((p) => meinP(p) && artOf(p) === artSel);
+    projects = arbeitsmenge();
     if (!focusP) $('projTitle').textContent = artSel === 'studie' ? 'Studien' : 'Projekte';
     if (!still) render();
   };
@@ -3832,21 +3876,56 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   let page = 'home', focusP = null;
   const initials = (pr) => (pr.kuerzel || (pr.name || '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 3) || 'ZG').toUpperCase();
   let profil = {};
+  const nachNummer = (a, b) => String(b.nummer || '').localeCompare(String(a.nummer || '')) || String(a.name || '').localeCompare(String(b.name || ''), 'de');
+  const sideBtn = (p, lang) => {
+    const b = el('button', 'side-it' + (ruhend(p) ? ' ruht' : '')); b.type = 'button'; b.dataset.pg = 'p:' + p.id;
+    const c = farbeOf(p); const d = el('span', 'pdot'); if (c) d.style.setProperty('--pc', c);
+    const n = tasks.filter((t) => t.projekt === p.id && !t.erledigt).length;
+    const lb = el('span', 'lb', (lang && p.nummer ? p.nummer + ' ' : '') + (p.name || p.id));
+    if (lang && p.titel) lb.append(el('small', '', p.titel));
+    b.append(d, lb, el('span', 'nm', n ? String(n) : (ruhend(p) ? STATUS_NAME[p.status] : '')));
+    b.title = (p.nummer ? p.nummer + ' ' : '') + (p.name || p.id) + (p.titel ? ' · ' + p.titel : '') + (n ? ' · ' + n + ' offen' : '') + (ruhend(p) ? ' · ' + STATUS_NAME[p.status] : '');
+    return b;
+  };
+  // Suche oben links: Nummer, Kürzel, Adresse, Gemeinde, Titel – über alle Projekte und Studien
+  const sucheZeigen = () => {
+    const q = $('sideSuch').value.trim().toLowerCase(), box = $('sideTreffer');
+    box.replaceChildren();
+    if (!q) { box.hidden = true; return; }
+    const worte = q.split(/\s+/);
+    const hit = allProjects.filter((p) => { const h = [p.nummer, p.name, p.id, p.titel, p.adresse, p.gemeinde, p.ordnerName].filter(Boolean).join(' ').toLowerCase(); return worte.every((w) => h.includes(w)); })
+      .sort((a, b) => (ruhend(a) - ruhend(b)) || nachNummer(a, b)).slice(0, 30);
+    if (!hit.length) box.append(el('div', 'leer', 'Kein Projekt gefunden.'));
+    hit.forEach((p) => box.append(sideBtn(p, true)));
+    box.hidden = false;
+  };
+  $('sideSuch').addEventListener('input', sucheZeigen);
+  $('sideSuch').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { const f = $('sideTreffer').querySelector('.side-it'); if (f) { setPage(f.dataset.pg); } }
+    if (e.key === 'Escape') { $('sideSuch').value = ''; sucheZeigen(); }
+  });
+  $('sideMehrH').addEventListener('click', () => {
+    const open = $('sideMehrH').getAttribute('aria-expanded') !== 'true';
+    $('sideMehrH').setAttribute('aria-expanded', String(open)); $('sideMehr').hidden = !open;
+    try { localStorage.setItem('cockpit-zg-mehr', open ? '1' : '0'); } catch (_) {}
+  });
+  try { if (localStorage.getItem('cockpit-zg-mehr') === '1') $('sideMehrH').setAttribute('aria-expanded', 'true'); } catch (_) {}
   const renderSide = () => {
     const box = $('sideProj'); if (!box) return;
     box.replaceChildren();
     const mine = allProjects.filter(meinP);
     const studien = mine.filter((p) => artOf(p) === 'studie');
     mine.filter((p) => artOf(p) === 'bau').concat(studien.length ? [null] : [], studien).forEach((p) => {
-      if (!p) { box.append(el('div', 'side-h studien', 'Studien')); return; }
-      const b = el('button', 'side-it'); b.type = 'button'; b.dataset.pg = 'p:' + p.id;
-      const c = farbeOf(p); const d = el('span', 'pdot'); if (c) d.style.setProperty('--pc', c);
-      const n = tasks.filter((t) => t.projekt === p.id && !t.erledigt).length;
-      b.append(d, el('span', 'lb', p.name || p.id), el('span', 'nm', n ? String(n) : ''));
-      b.title = (p.nummer ? p.nummer + ' ' : '') + (p.name || p.id) + (p.titel ? ' · ' + p.titel : '') + (n ? ' · ' + n + ' offen' : '');
-      box.append(b);
+      if (!p) { box.append(el('div', 'side-h studien', 'Meine Studien')); return; }
+      box.append(sideBtn(p, false));
     });
     $('sideProjH').hidden = !mine.some((p) => artOf(p) === 'bau');
+    // weitere laufende Projekte (nicht meine), aufklappbar
+    const mehr = allProjects.filter((p) => !ruhend(p) && !meinP0(p)).sort(nachNummer);
+    $('sideMehrH').hidden = !mehr.length; $('sideMehrN').textContent = mehr.length ? '(' + mehr.length + ')' : '';
+    const mb = $('sideMehr'); mb.replaceChildren(); mehr.forEach((p) => mb.append(sideBtn(p, true)));
+    mb.hidden = !mehr.length || $('sideMehrH').getAttribute('aria-expanded') !== 'true';
+    if ($('sideSuch').value) sucheZeigen();
     document.querySelectorAll('#side .side-it').forEach((x) => x.setAttribute('aria-current', x.dataset.pg === page ? 'page' : 'false'));
     $('sideZeit').textContent = $('dec').textContent !== '–' ? $('dec').textContent + ' h' : '';
     if (focusP && !$('pordner').hidden !== !!(projects.find((x) => x.id === focusP) || {}).ordner) showOrdner();
@@ -3870,13 +3949,23 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (!allProjects.length) { list.append(el('p', 'leer', 'Noch keine Projekte. Neue Projekte eröffnen der Administrator oder der Chef.')); return; }
     const name = (id) => { const u = wahlTeam.find((x) => x.id === id); return u ? u.kuerzel || u.name : null; };
     const nachNr = (a, b) => String(b.nummer || '').localeCompare(String(a.nummer || '')) || String(a.name || '').localeCompare(String(b.name || ''), 'de');
-    const gruppen = [['Projekte', allProjects.filter((p) => artOf(p) === 'bau').sort(nachNr)], ['Studien', allProjects.filter((p) => artOf(p) === 'studie').sort(nachNr)]];
+    const filt = $('wahlFilt').value;
+    const passt = (p) => filt === 'alle' || (filt === 'laufend' ? !ruhend(p) : p.status === filt);
+    const gruppen = [['Projekte', allProjects.filter((p) => artOf(p) === 'bau' && passt(p)).sort(nachNr)], ['Studien', allProjects.filter((p) => artOf(p) === 'studie' && passt(p)).sort(nachNr)]];
     gruppen.forEach(([gname, liste]) => { if (!liste.length) return; list.append(el('div', 'wahl-gr', gname + ' (' + liste.length + ')')); liste.forEach((p) => {
       const l = el('label', 'wahl-it'); const c = document.createElement('input'); c.type = 'checkbox'; c.checked = dabei(p, wer);
       const d = el('span', 'pdot'); const fc = farbeOf(p); if (fc) d.style.setProperty('--pc', fc);
       const t = el('span', 't', (p.nummer ? p.nummer + ' ' : '') + (p.name || p.id)); if (p.titel) t.append(el('small', '', p.titel));
       const andere = (Array.isArray(p.mitglieder) ? p.mitglieder : []).map(name).filter(Boolean);
-      l.append(c, d, t, el('span', 'w', andere.join(', ')));
+      if (ruhend(p)) l.classList.add('ruht');
+      let stx;
+      if (istBoss()) {
+        stx = document.createElement('select'); stx.setAttribute('aria-label', 'Status von ' + (p.name || p.id));
+        [['', '– offen –']].concat(Object.entries(STATUS_NAME)).forEach(([v, n]) => { const o = document.createElement('option'); o.value = v; o.textContent = n; stx.append(o); });
+        stx.value = p.status || '';
+        stx.addEventListener('change', async () => { try { await db.doc('projekte/' + p.id).update({ status: stx.value }); $('wahlMsg').textContent = (p.name || p.id) + ': ' + (STATUS_NAME[stx.value] || 'Status offen') + '.'; } catch (_) { $('wahlMsg').textContent = 'Speichern ging nicht.'; } });
+      } else stx = el('span', 'stx', STATUS_NAME[p.status] || '');
+      l.append(c, d, t, el('span', 'w', andere.join(', ')), stx);
       c.addEventListener('change', async () => {
         const alt = Array.isArray(p.mitglieder) ? p.mitglieder : [];
         const neu = alt.filter((x) => x !== wer).concat(c.checked ? [wer] : []);
@@ -3887,6 +3976,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     }); });
   }
   $('wahlFuer').addEventListener('change', renderWahl);
+  $('wahlFilt').addEventListener('change', renderWahl);
   if (window.native && window.native.bautenAbgleichen) {
     $('wahlSyncBox').hidden = false;
     $('wahlSync').addEventListener('click', async () => {
@@ -3902,6 +3992,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if ((page === 'team' || page === 'chef') && !bossView()) page = 'home';
     focusP = page.startsWith('p:') ? page.slice(2) : null;
     if (focusP) { const fp = allProjects.find((x) => x.id === focusP); if (fp && artOf(fp) !== artSel) setArt(artOf(fp), true); }
+    projects = arbeitsmenge();
     document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server', 'pg-team', 'pg-chef', 'pg-wahl');
     document.body.classList.add(focusP ? 'pg-projekt' : 'pg-' + page);
     try { localStorage.setItem(PK, page); } catch (_) {}
@@ -4551,7 +4642,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     const ready = () => { if (gotP && gotT) { loaded = true; render(); } };
     db.collection('projekte').orderBy('reihenfolge').onSnapshot((snap) => {
       allProjects = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort((a, b) => (a.reihenfolge || 0) - (b.reihenfolge || 0));
-      projects = allProjects.filter((p) => meinP(p) && artOf(p) === artSel);
+      projects = arbeitsmenge();
       if (page === 'wahl') renderWahl();
       gotP = true; ready(); todayHook();
     }, () => { gotP = true; ready(); });
