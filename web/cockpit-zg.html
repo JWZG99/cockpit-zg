@@ -4123,7 +4123,16 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     ctx.style.top = Math.max(4, Math.min(e.clientY, innerHeight - h - 4)) + 'px';
     const first = ctx.querySelector('button'); if (first) first.focus({ preventScroll: true });
   };
-  document.addEventListener('mousedown', (e) => { if (!ctx.hidden && !ctx.contains(e.target)) closeCtx(); }, true);
+  // Klick neben das offene Menü schliesst es nur, der Klick öffnet nichts (kein Ordner, keine Datei)
+  let ctxSchluck = 0;
+  document.addEventListener('mousedown', (e) => {
+    if (ctx.hidden || ctx.contains(e.target)) return;
+    closeCtx();
+    if (e.button === 0) { ctxSchluck = Date.now(); e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  const ctxWeg = (e) => { if (ctxSchluck && Date.now() - ctxSchluck < 1500) { e.preventDefault(); e.stopPropagation(); if (e.type === 'click') ctxSchluck = 0; } };
+  ['mouseup', 'click'].forEach((t) => document.addEventListener(t, ctxWeg, true));
+  document.addEventListener('dragstart', (e) => { if (ctxSchluck) { e.preventDefault(); } }, true);
   document.addEventListener('keydown', (e) => {
     if (ctx.hidden) return;
     if (e.key === 'Escape') { e.preventDefault(); closeCtx(); return; }

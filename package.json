@@ -1,7 +1,7 @@
 {
   "name": "cockpit-zg",
   "productName": "Cockpit ZG",
-  "version": "2.14.2",
+  "version": "2.14.3",
   "description": "Projekte, Aufgaben und Arbeitszeit von ZG als Windows-Programm",
   "main": "main.js",
   "author": "Zottele Gallicchio Architekten",
