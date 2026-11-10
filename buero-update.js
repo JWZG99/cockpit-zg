@@ -38,23 +38,37 @@ module.exports = ({ app, BUERO, dialog }) => {
   ].join('\r\n');
 
   // eigene Version auf G: ablegen (im Hintergrund; das erste Mal das ganze Programm, danach nur app.asar)
-  const ablegen = async () => {
+  // fortschritt(text, prozent) meldet, was gerade passiert
+  const ablegen = async (fortschritt = () => {}) => {
     const ganz = !ofs.existsSync(path.join(MASTER, 'Cockpit ZG.exe'));
-    if (ganz) {
-      const tmp = MASTER + '.neu';
-      await ofs.promises.rm(tmp, { recursive: true, force: true });
-      // nur das Programm, keine Daten, die im Programmordner liegen geblieben sind
-      const nurProgramm = (q) => { const rel = path.relative(progDir, q).toLowerCase(); return !/^(daten|dateien)([\\/]|$)|^cockpit-daten.*\.json$|\.neu$/.test(rel); };
-      await ofs.promises.cp(progDir, tmp, { recursive: true, filter: nurProgramm });
-      await ofs.promises.rm(MASTER, { recursive: true, force: true });
-      await ofs.promises.rename(tmp, MASTER);
-    } else {
-      const ziel = path.join(MASTER, 'resources', 'app.asar');
-      await ofs.promises.copyFile(path.join(resDir, 'app.asar'), ziel + '.neu');
-      await ofs.promises.rename(ziel + '.neu', ziel);
+    // nur das Programm, keine Daten, die im Programmordner liegen geblieben sind
+    const nurProgramm = (q) => { const rel = path.relative(progDir, q).toLowerCase(); return !/^(daten|dateien)([\\/]|$)|^cockpit-daten.*\.json$|\.neu$/.test(rel); };
+    const liste = [];
+    const sammeln = async (d) => {
+      for (const e of await ofs.promises.readdir(d, { withFileTypes: true })) {
+        const q = path.join(d, e.name); if (!nurProgramm(q)) continue;
+        if (e.isDirectory()) await sammeln(q); else liste.push({ q, gr: (await ofs.promises.stat(q)).size });
+      }
+    };
+    if (ganz) await sammeln(progDir); else liste.push({ q: path.join(resDir, 'app.asar'), gr: ofs.statSync(path.join(resDir, 'app.asar')).size });
+    const total = liste.reduce((a, x) => a + x.gr, 0) || 1;
+    let done = 0;
+    const text = 'Version ' + meine + ' wird für die anderen PCs auf G: abgelegt';
+    fortschritt(text, 0);
+    const basis = ganz ? MASTER + '.neu' : MASTER;
+    if (ganz) await ofs.promises.rm(basis, { recursive: true, force: true });
+    for (const x of liste) {
+      const rel = ganz ? path.relative(progDir, x.q) : path.join('resources', 'app.asar');
+      const z = path.join(basis, rel);
+      await ofs.promises.mkdir(path.dirname(z), { recursive: true });
+      await ofs.promises.copyFile(x.q, z + '.teil');
+      await ofs.promises.rename(z + '.teil', z);
+      done += x.gr; fortschritt(text, Math.round(done / total * 100));
     }
+    if (ganz) { await ofs.promises.rm(MASTER, { recursive: true, force: true }); await ofs.promises.rename(basis, MASTER); }
     await ofs.promises.writeFile(VJSON, JSON.stringify({ version: meine, am: new Date().toISOString(), von: os.hostname() }, null, 1));
     await ofs.promises.writeFile(path.join(BUERO, 'Cockpit installieren.cmd'), installer());
+    fortschritt(null);
   };
 
   // neue Version von G: holen, dann über ein kleines Skript austauschen und neu starten
@@ -76,16 +90,20 @@ module.exports = ({ app, BUERO, dialog }) => {
     return v;
   };
 
-  // beim Start: true = es wird gerade aktualisiert, das Programm soll sich beenden
-  const pruefen = () => {
-    if (!app.isPackaged || process.platform !== 'win32' || !ofs.existsSync(BUERO)) return false;
-    const g = lies(VJSON);
-    const gv = g && g.version;
-    if (gv && neuer(gv, meine) && ofs.existsSync(path.join(MASTER, 'resources', 'app.asar'))) {
-      try { holen(gv); return true; } catch (_) { return false; }
-    }
-    if (!gv || neuer(meine, gv)) ablegen().catch(() => {});
-    return false;
+  // Version auf G: (oder null)
+  const gVersion = () => { if (!ofs.existsSync(BUERO)) return null; const g = lies(VJSON); return g && g.version ? String(g.version) : null; };
+  // neuere Version auf G: bereit? -> Versionsnummer
+  const bereit = () => {
+    if (!app.isPackaged || process.platform !== 'win32') return null;
+    const gv = gVersion();
+    return gv && neuer(gv, meine) && ofs.existsSync(path.join(MASTER, 'resources', 'app.asar')) ? gv : null;
   };
-  return { pruefen, neuer };
+  // eigene Version neuer als G:? (dann ablegen)
+  const sollAblegen = () => {
+    if (!app.isPackaged || process.platform !== 'win32' || !ofs.existsSync(BUERO)) return false;
+    const gv = gVersion();
+    return !gv || neuer(meine, gv);
+  };
+  const installieren = () => { const v = bereit(); if (!v) return false; holen(v); return true; };
+  return { bereit, sollAblegen, ablegen, installieren, neuer, meine };
 };

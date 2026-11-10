@@ -3,7 +3,7 @@ import sys, pathlib
 src = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else 'web/cockpit-zg.html').read_text(encoding='utf-8')
 cdn = '<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>'
 assert cdn in src, 'jsPDF script tag not found'
-src = src.replace(cdn, '<script src="vendor/jspdf.umd.min.js"></script>\n<script src="claude-shim.js"></script>')
+src = src.replace(cdn, '<script src="vendor/jspdf.umd.min.js"></script>\n<script src="claude-shim.js"></script>\n<script src="hinweise.js"></script>')
 head = ('<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; img-src \'self\' data: blob:; style-src \'self\' \'unsafe-inline\'; script-src \'self\' \'unsafe-inline\'; connect-src \'self\'">\n'

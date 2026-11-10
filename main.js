@@ -229,8 +229,12 @@ const publicStore = () => {
 const showPage = () => { if (win && !win.isDestroyed()) win.loadURL(me() ? 'app://cockpit/index.html' : 'app://cockpit/anmelden.html'); };
 const userId = () => crypto.randomBytes(5).toString('hex');
 
+// Administrator wird nur ganz am Anfang angelegt (leerer gemeinsamer Datenordner, Server erreichbar). Neue Leute legen sich
+// selbst als Mitarbeiter an; Chef oder Administrator macht nur der Administrator unter «Team» (ZG, 10.11.2026).
+const serverDa = () => online && fs.existsSync(BUERO) && fs.existsSync(dataDir());
 ipcMain.handle('auth-state', () => ({
-  einrichten: !users().length,
+  einrichten: !users().length && serverDa(),
+  keinServer: !users().length && !serverDa(),
   online,
   benutzer: users().filter((u) => u.aktiv !== false).map(publicUser).sort((a, b) => a.name.localeCompare(b.name, 'de')),
   ich: me(),
@@ -238,12 +242,26 @@ ipcMain.handle('auth-state', () => ({
 // First start: the first person becomes administrator; the data of the single-user version (user «lokal») becomes theirs
 ipcMain.handle('auth-setup', (_e, { name, kuerzel, pw }) => {
   if (users().length) return { ok: false, error: 'Es gibt schon Benutzer.' };
-  if (!online && settings.datenOrdner) return { ok: false, error: 'Der Server ist nicht erreichbar. Bitte zuerst G: verbinden.' };
+  if (!serverDa()) return { ok: false, error: 'Der Server ist nicht erreichbar. Bitte zuerst G: verbinden.' };
   if (!String(name || '').trim() || String(pw || '').length < 4) return { ok: false, error: 'Name und ein Passwort mit mindestens 4 Zeichen eingeben.' };
   const id = userId();
   const ops = [{ kind: 'set', path: 'benutzer/' + id, data: { name: String(name).trim(), kuerzel: String(kuerzel || '').trim().toUpperCase(), rolle: 'admin', aktiv: true, pw: newPw(pw), erstellt: new Date().toISOString() } }];
   for (const k of Object.keys(store)) if (k.startsWith('data/users/lokal/')) { ops.push({ kind: 'set', path: 'data/users/' + id + '/' + k.slice(17), data: store[k] }); ops.push({ kind: 'delete', path: k }); }
   commit(ops);
+  session = { id, at: Date.now() }; fs.writeFileSync(SESSION, JSON.stringify(session));
+  showPage();
+  return { ok: true };
+});
+// Neu im Büro: selbst als Mitarbeiter anmelden
+ipcMain.handle('auth-register', (_e, { name, kuerzel, pw }) => {
+  if (!users().length) return { ok: false, error: 'Zuerst muss der Administrator eingerichtet sein.' };
+  if (!online) return { ok: false, error: 'Der Server ist nicht erreichbar. Bitte zuerst G: verbinden.' };
+  name = String(name || '').trim(); kuerzel = String(kuerzel || '').trim().toUpperCase().slice(0, 4);
+  if (!name || String(pw || '').length < 4) return { ok: false, error: 'Name und ein Passwort mit mindestens 4 Zeichen eingeben.' };
+  if (users().some((u) => u.name.toLowerCase() === name.toLowerCase())) return { ok: false, error: 'Diesen Namen gibt es schon. Wähl ihn in der Liste, oder lass dein Passwort unter «Team» neu setzen.' };
+  if (kuerzel && users().some((u) => (u.kuerzel || '').toUpperCase() === kuerzel)) return { ok: false, error: 'Dieses Kürzel ist schon vergeben.' };
+  const id = userId();
+  commit([{ kind: 'set', path: 'benutzer/' + id, data: { name, kuerzel, rolle: 'mitarbeiter', aktiv: true, pw: newPw(pw), erstellt: new Date().toISOString(), selbst: true } }]);
   session = { id, at: Date.now() }; fs.writeFileSync(SESSION, JSON.stringify(session));
   showPage();
   return { ok: true };
@@ -441,19 +459,32 @@ ipcMain.handle('choose-data-dir', async () => {
   return dataDir();
 });
 
+// Was das Programm gerade macht (Startbildschirm und Hinweis oben rechts) und Updates über G:
+const upd = require('./buero-update')({ app, BUERO, dialog });
+let aktiv = null, updGemeldet = null;
+const setAktiv = (t, pct) => { aktiv = t ? { t, pct: pct == null ? null : pct } : null; if (win && !win.isDestroyed()) win.webContents.send('aktivitaet', aktiv); };
+ipcMain.handle('aktivitaet', () => aktiv);
+ipcMain.handle('update-bereit', () => upd.bereit());
+ipcMain.handle('update-installieren', () => {
+  try { if (!upd.installieren()) return { ok: false, error: 'Kein Update gefunden.' }; } catch (_) { return { ok: false, error: 'Update holen ging nicht. Ist G: verbunden?' }; }
+  setAktiv('Update wird installiert, das Cockpit startet gleich neu …');
+  setTimeout(() => app.quit(), 600);
+  return { ok: true };
+});
+const updPruefen = () => { try { const v = upd.bereit(); if (v && v !== updGemeldet) { updGemeldet = v; if (win && !win.isDestroyed()) win.webContents.send('update-bereit', v); } } catch (_) {} };
+setInterval(updPruefen, 5 * 60 * 1000);
+
 const createWindow = () => {
   win = new BrowserWindow({
     width: 1320, height: 920, minWidth: 720, minHeight: 560, title: 'Cockpit ZG', backgroundColor: '#f2f2f7',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true },
   });
-  showPage();
+  win.webContents.on('did-finish-load', () => { if (aktiv) win.webContents.send('aktivitaet', aktiv); const v = upd.bereit(); if (v) win.webContents.send('update-bereit', v); });
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/i.test(url)) shell.openExternal(url); return { action: 'deny' }; });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://')) { e.preventDefault(); if (/^https?:/i.test(url)) shell.openExternal(url); } });
 };
 
 app.whenReady().then(() => {
-  // neuere Version auf G:? dann holen und neu starten (siehe buero-update.js)
-  try { if (require('./buero-update')({ app, BUERO, dialog }).pruefen()) { app.quit(); return; } } catch (_) {}
   protocol.handle('app', (req) => {
     const u = new URL(req.url);
     if (u.pathname.startsWith('/_blob/')) {
@@ -464,7 +495,6 @@ app.whenReady().then(() => {
     if (!f.startsWith(path.join(__dirname, 'app'))) return new Response('', { status: 403 });
     return net.fetch(pathToFileURL(f).toString());
   });
-  start();
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: 'Cockpit', submenu: [
       { label: 'Datenordner wählen …', click: () => win && win.webContents.send('ask-data-dir') },
@@ -478,5 +508,18 @@ app.whenReady().then(() => {
     { label: 'Ansicht', submenu: [{ role: 'reload', label: 'Neu laden' }, { role: 'resetZoom', label: 'Originalgrösse' }, { role: 'zoomIn', label: 'Vergrössern' }, { role: 'zoomOut', label: 'Verkleinern' }, { role: 'togglefullscreen', label: 'Vollbild' }] },
   ]));
   createWindow();
+  // Startbildschirm zuerst, dann die Daten von G: laden (das kann bei langsamem Netz ein paar Sekunden dauern)
+  setAktiv(fs.existsSync(BUERO) ? 'Verbinde mit dem Server G: …' : 'Server G: nicht gefunden, lade die lokale Kopie …');
+  win.loadURL('app://cockpit/laden.html');
+  win.webContents.once('did-finish-load', () => setTimeout(() => {
+    setAktiv('Lade die Daten …');
+    setTimeout(() => {
+      start();
+      setAktiv(null);
+      showPage();
+      updPruefen();
+      try { if (upd.sollAblegen()) upd.ablegen(setAktiv).catch(() => setAktiv(null)); } catch (_) {}
+    }, 30);
+  }, 30));
 });
 app.on('window-all-closed', () => app.quit());
