@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { pathToFileURL } = require('url');
-const { autoUpdater } = require('electron-updater');
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }]);
 
@@ -453,6 +452,8 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
+  // neuere Version auf G:? dann holen und neu starten (siehe buero-update.js)
+  try { if (require('./buero-update')({ app, BUERO, dialog }).pruefen()) { app.quit(); return; } } catch (_) {}
   protocol.handle('app', (req) => {
     const u = new URL(req.url);
     if (u.pathname.startsWith('/_blob/')) {
@@ -469,7 +470,7 @@ app.whenReady().then(() => {
       { label: 'Datenordner wählen …', click: () => win && win.webContents.send('ask-data-dir') },
       { label: 'Datenordner öffnen', click: () => shell.openPath(dataDir()) },
       { type: 'separator' },
-      { label: 'Nach Updates suchen', click: () => autoUpdater.checkForUpdatesAndNotify().catch(() => {}) },
+      { label: 'Version ' + app.getVersion(), enabled: false },
       { type: 'separator' },
       { role: 'quit', label: 'Beenden' },
     ] },
@@ -477,6 +478,5 @@ app.whenReady().then(() => {
     { label: 'Ansicht', submenu: [{ role: 'reload', label: 'Neu laden' }, { role: 'resetZoom', label: 'Originalgrösse' }, { role: 'zoomIn', label: 'Vergrössern' }, { role: 'zoomOut', label: 'Verkleinern' }, { role: 'togglefullscreen', label: 'Vollbild' }] },
   ]));
   createWindow();
-  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(() => {});
 });
 app.on('window-all-closed', () => app.quit());
