@@ -155,6 +155,10 @@ h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter
 .facts .ordn .vl { font-size: 13px; color: var(--muted); }
 .facts .ordn button { font: inherit; font-weight: 600; color: var(--accent, #0a84ff); background: none; border: 0; padding: 0; cursor: pointer; text-align: right; overflow-wrap: anywhere; }
 .pathrow { display: flex; gap: 8px; } .pathrow input { flex: 1; min-width: 0; }
+.mitl { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.mitl .mit { display: flex; align-items: center; gap: 6px; font-size: 15px; cursor: pointer; }
+.mitl .mit input { width: 18px; height: 18px; }
+#fMitBox .hint, .mitl .hint { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
 #pordner { max-width: 1000px; margin: 18px 0 0; }
 #pordner h3 { margin: 0 4px 8px; font-size: 17px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 #pordner .pfad { flex: 1 1 260px; min-width: 0; font: inherit; font-size: 14px; font-weight: 400; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line, rgba(0,0,0,.12)); background: var(--card, #fff); color: inherit; }
@@ -1165,6 +1169,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     <div class="field"><span class="flabel" id="fFarbeLbl">Farbe</span><div class="swatches" id="fFarbe" role="radiogroup" aria-labelledby="fFarbeLbl"></div></div>
     <div class="field"><label for="fVerant">Verantwortlich</label><input id="fVerant" placeholder="z. B. Name der Projektleitung"></div>
     <div class="field"><label for="fOrdner">Projektordner auf dem Server</label><div class="pathrow"><input id="fOrdner" placeholder="z. B. G:\Projekte\HOL"><button type="button" class="btn" id="fOrdnerPick" hidden>Wählen …</button></div></div>
+    <div class="field" id="fMitBox" hidden><label>Mitarbeiter in diesem Projekt</label><div class="mitl" id="fMit"></div><p class="hint">Nur angehakte Mitarbeiter sehen das Projekt. Chef und Administrator sehen alle Projekte.</p></div>
     <div class="err" id="pErr" aria-live="polite"></div>
     <button type="button" class="btn danger" id="pDelete">Projekt löschen</button>
   </div>
@@ -1457,6 +1462,9 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   let db = null, canWrite = true;
   let assets = null, tEditing = null, tImgs = [], tAdded = [], tUploads = 0;
   let projects = [], tasks = [], termine = [], loaded = false, view = 'karten';
+  // alle Aufgaben (nur Chef/Administrator bekommen fremde überhaupt), «tasks» = nur die eigenen (ZG, 10.11.2026)
+  let allTasks = [], IST = null;
+  const eigen = (x) => !IST || (x.von ? x.von === IST.id : IST.rolle === 'admin');
   const showDone = new Set(), addArt = {};
 
   const card = (p) => {
@@ -1881,6 +1889,21 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       box.append(b);
     });
   };
+  // Mitglieder: wer (ausser Chef und Administrator) das Projekt sieht
+  const drawMit = async (p) => {
+    const box = $('fMitBox'), list = $('fMit');
+    const boss = IST && (IST.rolle === 'chef' || IST.rolle === 'admin');
+    box.hidden = true; list.replaceChildren();
+    if (!boss || !window.native || !window.native.teamList) return;
+    let team = []; try { team = (await window.native.teamList()).filter((u) => u.aktiv !== false && u.rolle === 'mitarbeiter'); } catch (_) { return; }
+    const sel = new Set(Array.isArray(p && p.mitglieder) ? p.mitglieder : []);
+    if (!team.length) list.append(el('p', 'hint', 'Noch keine Mitarbeiter im Team.'));
+    team.sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((u) => {
+      const l = el('label', 'mit'); const c = document.createElement('input'); c.type = 'checkbox'; c.value = u.id; c.checked = sel.has(u.id);
+      l.append(c, el('span', '', u.name + (u.kuerzel ? ' (' + u.kuerzel + ')' : ''))); list.append(l);
+    });
+    box.hidden = false;
+  };
   const openPanel = (p) => {
     editing = p;
     pFarbe = (p && p.farbe) || ''; drawSwatches();
@@ -1894,6 +1917,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     F.status.value = p?.status || '';
     F.verant.value = p?.verantwortlich || '';
     F.ordner.value = p?.ordner || '';
+    drawMit(p);
     $('scrim').hidden = false;
     (p ? F.titel : F.code).focus();
   };
@@ -1905,6 +1929,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     const code = F.code.value.trim();
     if (!code) { $('pErr').textContent = 'Gib ein Kürzel ein, z. B. HOL.'; return; }
     const data = { name: code, titel: F.titel.value.trim(), phase: F.phase.value, status: F.status.value, verantwortlich: F.verant.value.trim(), ordner: F.ordner.value.trim().replace(/^"(.*)"$/, '$1'), farbe: pFarbe };
+    if (!$('fMitBox').hidden) data.mitglieder = [...$('fMit').querySelectorAll('input:checked')].map((c) => c.value);
     $('pSave').disabled = true;
     try {
       if (editing) await db.doc('projekte/' + editing.id).update(data);
@@ -1922,7 +1947,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (!armed) { armed = true; $('pDelete').classList.add('armed'); $('pDelete').textContent = 'Wirklich löschen?'; return; }
     const id = editing.id;
     try {
-      for (const t of tasks.filter((t) => t.projekt === id)) await db.doc('aufgaben/' + t.id).delete();
+      for (const t of allTasks.filter((t) => t.projekt === id)) await db.doc('aufgaben/' + t.id).delete();
       await db.doc('projekte/' + id).delete();
       closePanel();
     } catch (e) { $('pErr').textContent = 'Löschen hat nicht geklappt.'; }
@@ -4286,7 +4311,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       const tbl = el('table'); const h = el('tr'); ['Projekt', 'Phase', 'Status', 'Verantwortlich', 'Offen', 'Überfällig', 'Std. Woche'].forEach((x, i) => h.append(el('th', i >= 4 ? 'num' : '', x)));
       tbl.append(h);
       projects.forEach((p) => {
-        const mine = tasks.filter((t) => t.projekt === p.id && !t.erledigt);
+        const mine = allTasks.filter((t) => t.projekt === p.id && !t.erledigt);
         const late = mine.filter((t) => t.faellig && t.faellig < today).length;
         const tr = el('tr', 'go'); tr.title = 'Projektseite öffnen';
         tr.append(el('td', '', (p.name || p.id) + (p.titel ? ' · ' + p.titel : '')), el('td', '', p.phase ? p.phase + ' ' + (PHASE_NAME[p.phase] || '') : '–'), el('td', '', STATUS_NAME[p.status] || '–'),
@@ -4298,13 +4323,14 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     }
     // Überfällige Aufgaben
     const lb = $('cbLate'); lb.replaceChildren();
-    const late = tasks.filter((t) => !t.erledigt && t.faellig && t.faellig < today).sort((a, b) => a.faellig.localeCompare(b.faellig));
+    const late = allTasks.filter((t) => !t.erledigt && t.faellig && t.faellig < today).sort((a, b) => a.faellig.localeCompare(b.faellig));
+    const wer = (t) => { const u = team.find((x) => x.id === t.von) || (!t.von && team.find((x) => x.rolle === "admin")); return u ? u.kuerzel || u.name : "–"; };
     if (!late.length) lb.append(el('p', 'leer', 'Nichts überfällig.'));
     else {
-      const tbl = el('table'); const h = el('tr'); ['Aufgabe', 'Projekt', 'Fällig seit'].forEach((x) => h.append(el('th', '', x))); tbl.append(h);
+      const tbl = el('table'); const h = el('tr'); ['Aufgabe', 'Wer', 'Projekt', 'Fällig seit'].forEach((x) => h.append(el('th', '', x))); tbl.append(h);
       late.forEach((t) => {
         const p = projects.find((x) => x.id === t.projekt);
-        const tr = el('tr'); tr.append(el('td', '', t.text || 'Aufgabe'), el('td', '', p ? p.name || p.id : '–'), el('td', 'late', new Date(t.faellig + 'T00:00').toLocaleDateString('de-CH')));
+        const tr = el('tr'); tr.append(el('td', '', t.text || 'Aufgabe'), el('td', '', wer(t)), el('td', '', p ? p.name || p.id : '–'), el('td', 'late', new Date(t.faellig + 'T00:00').toLocaleDateString('de-CH')));
         tbl.append(tr);
       });
       lb.append(tbl);
@@ -4415,6 +4441,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (!d) { db = false; render(); todayHook(); return; }
     db = d;
     if (user) { const w = await user.can('data.write'); if (w === false) canWrite = false; }
+    if (window.native && window.native.me) { try { IST = await window.native.me(); } catch (_) {} }
     let gotP = false, gotT = false;
     const ready = () => { if (gotP && gotT) { loaded = true; render(); } };
     db.collection('projekte').orderBy('reihenfolge').onSnapshot((snap) => {
@@ -4422,11 +4449,12 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       gotP = true; ready(); todayHook();
     }, () => { gotP = true; ready(); });
     db.collection('aufgaben').onSnapshot((snap) => {
-      tasks = snap.docs.map((x) => ({ id: x.id, ...x.data() }));
+      allTasks = snap.docs.map((x) => ({ id: x.id, ...x.data() }));
+      tasks = allTasks.filter(eigen);
       gotT = true; ready(); todayHook();
     }, () => { gotT = true; ready(); });
     db.collection('termine').onSnapshot((snap) => {
-      termine = snap.docs.map((x) => ({ id: x.id, ...x.data() }));
+      termine = snap.docs.map((x) => ({ id: x.id, ...x.data() })).filter(eigen);
       if (loaded) render();
     }, () => {});
     const id = user ? await user.id() : null;

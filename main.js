@@ -218,13 +218,50 @@ const hashPw = (pw, salt) => crypto.scryptSync(String(pw), salt, 32).toString('h
 const newPw = (pw) => { const salt = crypto.randomBytes(16).toString('hex'); return { salt, hash: hashPw(pw, salt) }; };
 const pwOk = (u, pw) => { if (!u || !u.pw) return false; const h = Buffer.from(hashPw(pw, u.pw.salt), 'hex'); const w = Buffer.from(u.pw.hash, 'hex'); return h.length === w.length && crypto.timingSafeEqual(h, w); };
 const publicUser = (u) => ({ id: u.id, name: u.name, kuerzel: u.kuerzel || '', rolle: u.rolle || 'mitarbeiter', aktiv: u.aktiv !== false });
+// Wer sieht was (ZG, 10.11.2026): Projekte sind gemeinsam, werden aber nur vom Administrator oder Chef eröffnet; ein Mitarbeiter
+// sieht nur die Projekte, bei denen er unter «mitglieder» eingetragen ist. Aufgaben und Termine gehören der Person, die sie
+// erstellt hat («von»); sie sieht nur diese, der Chef und der Administrator sehen alle. Ältere Einträge ohne «von» gehören
+// dem Administrator. Private Daten (data/users/<id>) sieht ein Mitarbeiter nur von sich selbst.
+const PERSOENLICH = /^(aufgaben|termine)\/[^/]+$/;
+const adminId = () => { const a = users().find((u) => u.rolle === 'admin'); return a ? a.id : null; };
+const besitzer = (v) => (v && v.von) || adminId();
+const darfSehen = (k, m) => {
+  if (!m) return false;
+  if (m.rolle === 'chef' || m.rolle === 'admin') return true;
+  if (PERSOENLICH.test(k)) return besitzer(store[k]) === m.id;
+  if (/^projekte\/[^/]+$/.test(k)) { const p = store[k] || {}; return Array.isArray(p.mitglieder) && p.mitglieder.includes(m.id); }
+  if (k.startsWith('data/users/')) return k.startsWith('data/users/' + m.id + '/');
+  return true;
+};
 const publicStore = () => {
-  const o = {};
+  const o = {}, m = me();
   for (const k of Object.keys(store)) {
+    if (!darfSehen(k, m)) continue;
     if (k.startsWith('benutzer/')) { const { pw, ...rest } = store[k] || {}; o[k] = rest; }
     else o[k] = store[k];
   }
   return o;
+};
+// Schreibregeln für die Seite und den Assistenten: neue Aufgaben/Termine bekommen «von»; ein Mitarbeiter ändert nur Eigenes
+// und an Projekten nur Kleinigkeiten (Reihenfolge, Mindmap, verknüpfte Dateien), keine neuen Projekte und keine Mitglieder.
+const regeln = (ops) => {
+  const m = me(); if (!m) return [];
+  const boss = m.rolle === 'chef' || m.rolle === 'admin';
+  return (ops || []).filter((o) => o && typeof o.path === 'string' && !o.path.startsWith('benutzer/')).map((o) => {
+    const k = o.path, alt = store[k];
+    if (PERSOENLICH.test(k)) {
+      if (alt !== undefined && !boss && besitzer(alt) !== m.id) return null;
+      if (o.kind === 'set') return { ...o, data: { ...(o.data || {}), von: alt !== undefined ? besitzer(alt) : (o.data && o.data.von) || m.id } };
+      if (o.kind === 'update' && o.data && 'von' in o.data && !boss) { const { von, ...rest } = o.data; return { ...o, data: rest }; }
+      return o;
+    }
+    if (/^projekte\/[^/]+$/.test(k) && !boss) {
+      if (o.kind !== 'update' || alt === undefined || !darfSehen(k, m)) return null;
+      const { mitglieder, ...rest } = o.data || {}; return { ...o, data: rest };
+    }
+    if (k.startsWith('data/users/') && !boss && !k.startsWith('data/users/' + m.id + '/')) return null;
+    return o;
+  }).filter(Boolean);
 };
 const showPage = () => { if (win && !win.isDestroyed()) win.loadURL(me() ? 'app://cockpit/index.html' : 'app://cockpit/anmelden.html'); };
 const userId = () => crypto.randomBytes(5).toString('hex');
@@ -307,9 +344,9 @@ ipcMain.handle('team-save', (_e, d) => {
 ipcMain.handle('db-all', () => (me() ? publicStore() : {}));
 ipcMain.handle('db-write', (_e, ops) => {
   if (!me()) return false;
-  ops = (ops || []).filter((o) => o && typeof o.path === 'string' && !o.path.startsWith('benutzer/'));
+  ops = regeln(ops);
   touch();
-  commit(ops);
+  if (ops.length) commit(ops);
   changed();
   return true;
 });
@@ -394,7 +431,7 @@ ipcMain.handle('delete-path', async (_e, p) => {
   return { ok: true };
 });
 // Assistent (Claude) im Programm
-require('./ki')({ ipcMain, dataDir, getStore: () => store, commit, changed, me, isAdmin: () => { const m = me(); return !!m && m.rolle === 'admin'; }, listDir });
+require('./ki')({ ipcMain, dataDir, getStore: () => publicStore(), commit: (ops) => { const r = regeln(ops); if (r.length) commit(r); }, changed, me, isAdmin: () => { const m = me(); return !!m && m.rolle === 'admin'; }, listDir });
 
 const TYPES = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', txt: 'text/plain', csv: 'text/csv', md: 'text/markdown', json: 'application/json', mp4: 'video/mp4', webm: 'video/webm' };
 const findAsset = (id) => {
