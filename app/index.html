@@ -810,6 +810,16 @@ body.pg-zeit #heuteToggle .chev, body.pg-zeit .ttabs { display: none; }
 body.pg-zeit #tView { order: 1; }
 body.pg-zeit #wView { order: 2; border-top: 0.5px solid var(--line); padding-top: 18px; margin-top: 6px; }
 body.pg-zeit #heuteToggle { pointer-events: none; }
+.taet { display: none; margin-top: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 20px 12px; }
+body.pg-zeit .taet { display: block; }
+.taet-h { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; font-size: 17px; }
+.taet-sum { font-weight: 500; font-size: 14px; color: var(--muted); }
+.taet-hint { margin: 4px 0 10px; font-size: 13px; color: var(--muted); }
+.taet-z { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr) 76px; gap: 8px; padding: 5px 0; border-top: 0.5px solid var(--line); }
+.taet-z:first-child { border-top: 0; }
+.taet-z select, .taet-z input { font: inherit; font-size: 14px; min-height: 36px; box-sizing: border-box; width: 100%; padding: 6px 10px; border-radius: 9px; border: 0.5px solid var(--line); background: var(--fill); color: var(--fg); }
+.taet-z input.std { text-align: right; }
+@media (max-width: 640px) { .taet-z { grid-template-columns: minmax(0, 1fr) 76px; } .taet-z .tx { grid-column: 1 / -1; grid-row: 1; } }
 body.pg-projekt #projekte .filters { display: none; }
 body.pg-projekt .grid { grid-template-columns: minmax(0, 1fr); max-width: 1000px; }
 body.pg-projekt .grid .card .code { font-size: 34px; }
@@ -1035,6 +1045,11 @@ body.r-mitarbeiter #pDelete { display: none !important; }
           <button type="button" class="btn ghost" id="newDay">Neuer Tag</button>
         </div>
       </div>
+    </div>
+    <div class="taet" id="taet">
+      <div class="taet-h"><span>Was ich heute gemacht habe</span><span class="taet-sum" id="taetSum"></span></div>
+      <p class="taet-hint">Für alles, was nicht in den Aufgaben steht. Sobald du eine Zeile schreibst, kommt eine neue dazu.</p>
+      <div id="taetList"></div>
     </div>
   </div>
   </section>
@@ -1859,6 +1874,51 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       else if (splits[iso] && splits[iso].projekte) per = Object.entries(splits[iso].projekte).map(([k, h]) => [k === 'ohne' ? '' : k, Number(h) || 0]);
       return per.filter(([, h]) => h >= 0.05).sort((a, b) => b[1] - a[1]).map(([k, h]) => [k, h, farbeOf(k)]);
     } catch (_) { return []; }
+  };
+  // «Was ich heute gemacht habe»: freie Zeilen pro Tag (Projekt, Text, Stunden), privat unter data/users/<id>/zeit/taetigkeiten/<Datum>
+  let taetRef = null, taetTage = {}, taetTimer = null;
+  const taetZeilen = () => [...$('taetList').querySelectorAll('.taet-z')].map((z) => ({ id: z.dataset.id, projekt: z.querySelector('select').value, text: z.querySelector('.tx').value.trim(), std: z.querySelector('.std').value.trim() })).filter((z) => z.text || z.std);
+  const taetSumme = (zs) => { const h = zs.reduce((a, z) => a + (parseFloat(String(z.std).replace(',', '.')) || 0), 0); $('taetSum').textContent = h ? (Math.round(h * 100) / 100).toString().replace('.', ',') + ' h eingetragen' : ''; };
+  const taetSpeichern = () => {
+    clearTimeout(taetTimer);
+    taetTimer = setTimeout(() => {
+      const iso = isoDay(), zs = taetZeilen();
+      taetSumme(zs);
+      taetTage[iso] = { datum: iso, zeilen: zs };
+      if (taetRef) taetRef.doc(iso).set({ datum: iso, zeilen: zs, geaendert: Date.now() }).catch(() => {});
+    }, 500);
+  };
+  const taetZeile = (z) => {
+    const r = el('div', 'taet-z'); r.dataset.id = z.id || Math.random().toString(36).slice(2, 10);
+    const sel = el('select'); sel.setAttribute('aria-label', 'Projekt');
+    sel.append(new Option('Ohne Projekt', ''));
+    allProjects.filter((p) => !ruhend(p) || p.id === z.projekt).sort((a, b) => (meinP(b) - meinP(a)) || nachNummer(a, b))
+      .forEach((p) => sel.append(new Option((p.nummer ? p.nummer + ' ' : '') + (p.name || p.id), p.id)));
+    sel.value = z.projekt || '';
+    const tx = el('input', 'tx'); tx.type = 'text'; tx.placeholder = 'Was hast du gemacht?'; tx.value = z.text || ''; tx.setAttribute('aria-label', 'Tätigkeit');
+    const st = el('input', 'std'); st.type = 'text'; st.inputMode = 'decimal'; st.placeholder = 'Std.'; st.value = z.std || ''; st.setAttribute('aria-label', 'Stunden');
+    const geaendert = () => {
+      const zeilen = [...$('taetList').children];
+      const letzte = zeilen[zeilen.length - 1];
+      if (letzte && (letzte.querySelector('.tx').value.trim() || letzte.querySelector('.std').value.trim())) $('taetList').append(taetZeile({}));
+      taetSpeichern();
+    };
+    [tx, st].forEach((i) => i.addEventListener('input', geaendert));
+    sel.addEventListener('change', geaendert);
+    tx.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const n = r.nextElementSibling; if (n) n.querySelector('.tx').focus(); } });
+    // leere Zeile verlassen: weg damit (die letzte leere bleibt)
+    r.addEventListener('focusout', () => setTimeout(() => {
+      if (r.contains(document.activeElement)) return;
+      if (!tx.value.trim() && !st.value.trim() && r !== $('taetList').lastElementChild) { r.remove(); taetSpeichern(); }
+    }, 0));
+    r.append(sel, tx, st);
+    return r;
+  };
+  const renderTaet = () => {
+    const box = $('taetList'); if (!box) return;
+    const v = taetTage[isoDay()], zs = (v && Array.isArray(v.zeilen)) ? v.zeilen : [];
+    box.replaceChildren(...zs.map(taetZeile), taetZeile({}));
+    taetSumme(zs);
   };
   // the picked day in «Letzte 7 Tage» shows its split too
   const deSplitText = (iso) => {
@@ -4030,6 +4090,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       if (wasP) { let v = 'karten'; try { v = localStorage.getItem(VK) || 'karten'; } catch (_) {} setView(v); }
     }
     render(); renderTime(); showOrdner(); renderVerk();
+    if (page === 'zeit' && !$('taet').contains(document.activeElement)) renderTaet();
     if (page === 'team') renderTeam();
     if (page === 'chef') renderChef();
     if (page === 'wahl') renderWahl();
@@ -4707,6 +4768,12 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       todayHook();
     }, () => { splitRef = null; });
     timeRef.onSnapshot((snap) => { if (snap.exists && !snap.metadata?.hasPendingWrites) applyTime(snap.data()); }, () => { timeRef = null; });
+    taetRef = db.collection('data/users/' + id + '/zeit/taetigkeiten');
+    taetRef.orderBy('datum', 'desc').limit(31).onSnapshot((snap) => {
+      taetTage = {};
+      snap.docs.forEach((x) => { const v = x.data(); if (v && v.datum) taetTage[v.datum] = v; });
+      if (!$('taet').contains(document.activeElement)) renderTaet();
+    }, () => { taetRef = null; });
   })();
   setInterval(() => { if (loaded && $('scrim').hidden && !document.querySelector('.add input:focus')) { renderedDay = isoDay(); render(); } }, 600000);
   // Seite war im Hintergrund / über Nacht offen: beim Zurückkommen sofort prüfen (Tageswechsel, Archiv)
