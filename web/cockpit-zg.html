@@ -844,7 +844,34 @@ body.pg-projekt .grid .card .code { font-size: 34px; }
 .ki-mod select { flex: 1; font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 9px; border: 0.5px solid var(--line); background: var(--fill); color: var(--text); }
 .ki-m .wer { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
 /* Mehrbenutzer (Programm): Team, Chef-Übersicht, Abmelden */
-body:not(.pg-team) #team, body:not(.pg-chef) #chef, body:not(.pg-wahl) #wahl { display: none !important; }
+body:not(.pg-team) #team, body:not(.pg-chef) #chef, body:not(.pg-wahl) #wahl, body:not(.pg-mail) #mail { display: none !important; }
+body.pg-mail #heuteRow, body.pg-mail #projekte { display: none !important; }
+.mail-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; }
+.mail-bar input { flex: 1 1 200px; font: inherit; font-size: 14px; min-height: 36px; padding: 6px 12px; border-radius: 10px; border: 0.5px solid var(--line); background: var(--fill); color: var(--fg); }
+.mail-wrap { display: grid; grid-template-columns: minmax(260px, 400px) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .mail-wrap { grid-template-columns: minmax(0, 1fr); } }
+.mail-list, .mail-read { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.mail-list { max-height: calc(100vh - 230px); overflow-y: auto; }
+.mail-it { display: block; width: 100%; text-align: left; border: 0; border-top: 0.5px solid var(--line); background: none; font: inherit; color: inherit; padding: 9px 14px; cursor: pointer; }
+.mail-it:first-child { border-top: 0; }
+.mail-it:hover { background: var(--fill); }
+.mail-it.sel { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.mail-it .k { display: flex; gap: 8px; justify-content: space-between; font-size: 14px; }
+.mail-it .k b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-it .k span { color: var(--muted); font-size: 12.5px; flex: none; }
+.mail-it .b { font-size: 13.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+.mail-it.neu .k b { font-weight: 700; } .mail-it.neu .b { color: var(--fg); font-weight: 600; }
+.mail-it.neu { box-shadow: inset 3px 0 0 var(--accent); }
+.mail-list .leer, .mail-read .leer { padding: 18px; color: var(--muted); font-size: 14px; }
+.mail-read { padding: 18px 20px; min-height: 200px; }
+.mail-read .leer { padding: 0; }
+.mail-read h3 { margin: 0 0 6px; font-size: 19px; }
+.mail-read .meta { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+.mail-read .acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.mail-read .verk { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+.mail-read .anh { font-size: 13px; margin: 0 0 10px; }
+.mail-read .txt { white-space: pre-wrap; word-wrap: break-word; font-size: 14px; line-height: 1.5; border-top: 0.5px solid var(--line); padding-top: 12px; max-height: calc(100vh - 360px); overflow-y: auto; }
+.mail-read .err { color: #c0392b; font-size: 14px; }
 body.pg-team #heuteRow, body.pg-team #projekte, body.pg-chef #heuteRow, body.pg-chef #projekte, body.pg-wahl #heuteRow, body.pg-wahl #projekte { display: none !important; }
 #wahl { max-width: 900px; }
 #wahlMsg { font-size: 13px; color: var(--muted); margin: 10px 0 0; min-height: 1.2em; }
@@ -904,6 +931,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   <button type="button" class="side-it" data-pg="home"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Übersicht</span></button>
   <button type="button" class="side-it" data-pg="zeit"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Zeiterfassung</span><span class="nm" id="sideZeit"></span></button>
   <button type="button" class="side-it" data-pg="server" id="sideServer" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Server</span><span class="nm"></span></button>
+  <button type="button" class="side-it" data-pg="mail" id="sideMail" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="lb">Mails</span><span class="nm" id="sideMailN"></span></button>
   <button type="button" class="side-it" id="sideKi" hidden aria-controls="ki" aria-expanded="false"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 9.5h7M8.5 12.5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lb">Assistent</span><span class="nm"></span></button>
   <button type="button" class="side-it" data-pg="chef" id="sideChef" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="12" width="4" height="7.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="7" width="4" height="12.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="16.5" y="4" width="4" height="15.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span><span class="lb">Chef-Übersicht</span><span class="nm"></span></button>
   <button type="button" class="side-it" data-pg="team" id="sideTeam" hidden><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="9" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.5" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16.5 13c2.3 0 3.8 1.3 4.3 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="lb">Team</span><span class="nm"></span></button>
@@ -958,6 +986,20 @@ body.r-mitarbeiter #pDelete { display: none !important; }
         <label class="tm-akt"><input type="checkbox" id="tmAktiv" checked> Aktiv (kann sich anmelden)</label>
         <div class="pw-row"><button type="button" class="btn primary" id="tmSave">Speichern</button><button type="button" class="btn ghost" id="tmNew">Neue Person</button><span class="hint" id="tmMsg" aria-live="polite"></span></div>
       </div>
+    </div>
+  </section>
+
+  <section id="mail" aria-labelledby="mailTitle">
+    <div class="sec-head"><h2 id="mailTitle">Mails</h2><span class="hint" id="mailHint">Aus deinem Outlook auf diesem PC</span></div>
+    <div class="mail-bar">
+      <div class="seg" role="group" aria-label="Ordner"><button type="button" class="segb" id="mailIn" aria-pressed="true">Posteingang</button><button type="button" class="segb" id="mailOut" aria-pressed="false">Gesendet</button></div>
+      <input type="search" id="mailSuch" placeholder="Mails filtern …" aria-label="Mails filtern" autocomplete="off">
+      <button type="button" class="btn ghost" id="mailReload">Aktualisieren</button>
+      <button type="button" class="btn primary" id="mailNeu">Neue Mail</button>
+    </div>
+    <div class="mail-wrap">
+      <div class="mail-list" id="mailList" role="list"></div>
+      <div class="mail-read" id="mailRead"><div class="leer">Wähle links eine Mail aus.</div></div>
     </div>
   </section>
 
@@ -4067,7 +4109,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     focusP = page.startsWith('p:') ? page.slice(2) : null;
     if (focusP) { const fp = allProjects.find((x) => x.id === focusP); if (fp && artOf(fp) !== artSel) setArt(artOf(fp), true); }
     projects = arbeitsmenge();
-    document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server', 'pg-team', 'pg-chef', 'pg-wahl');
+    document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server', 'pg-team', 'pg-chef', 'pg-wahl', 'pg-mail');
     document.body.classList.add(focusP ? 'pg-projekt' : 'pg-' + page);
     try { localStorage.setItem(PK, page); } catch (_) {}
     if (focusP) {
@@ -4083,6 +4125,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (page === 'team') renderTeam();
     if (page === 'chef') renderChef();
     if (page === 'wahl') renderWahl();
+    if (page === 'mail') mailSeite();
     window.scrollTo({ top: 0 });
   };
   // Dateien auf dem Server (nur im Programm): Projektordner, Seite «Server», Verknüpfungen mit Projekten und Aufgaben
@@ -4361,9 +4404,9 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   if (NATIVE_FS) $('sideServer').hidden = false;
 
   // Verknüpfen: Datei oder Ordner an ein Projekt oder eine offene Aufgabe hängen (nur der Pfad wird gespeichert)
-  let lkPfad = null;
+  let lkPfad = null, lkTitel = null, lkModus = 'link';
   const linkTo = async (target, pfade) => {
-    const neu = pfade.map((z) => ({ id: uid(), art: 'link', name: baseName(z), ziel: z }));
+    const neu = pfade.map((z) => (typeof z === 'object' ? { id: uid(), art: 'link', name: z.name, ziel: z.ziel } : { id: uid(), art: 'link', name: baseName(z), ziel: z }));
     if (target.startsWith('p:')) {
       const p = projects.find((x) => x.id === target.slice(2)); if (!p) return;
       const alt = Array.isArray(p.dateien) ? p.dateien : [];
@@ -4375,10 +4418,17 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     await db.doc('aufgaben/' + t.id).update({ anhaenge: alt.concat(neu.filter((n) => !alt.some((a) => a.ziel === n.ziel))) });
     return 'Aufgabe «' + t.text + '»';
   };
-  const openLink = (pfad) => {
-    lkPfad = pfad;
-    $('lkName').textContent = pfad;
+  const openLink = (pfad, titel, modus) => {
+    lkPfad = pfad; lkTitel = titel || null; lkModus = modus || 'link';
+    $('lkName').textContent = titel || pfad;
+    $('lkH').textContent = lkModus === 'aufgabe' ? 'Aufgabe erstellen in …' : 'Verknüpfen mit …';
+    $('lkOk').textContent = lkModus === 'aufgabe' ? 'Aufgabe erstellen' : 'Verknüpfen';
     const sel = $('lkSel'); sel.replaceChildren();
+    if (lkModus === 'aufgabe') {
+      projects.slice().sort((a, b) => (meinP(b) - meinP(a)) || nachNummer(a, b)).forEach((p) => sel.append(new Option((p.nummer ? p.nummer + ' ' : '') + (p.name || p.id) + (p.titel ? ' · ' + p.titel : ''), 'p:' + p.id)));
+      if (focusP) sel.value = 'p:' + focusP;
+      $('lkScrim').hidden = false; sel.focus(); return;
+    }
     projects.forEach((p) => {
       const g = document.createElement('optgroup'); g.label = (p.name || p.id) + (p.titel ? ' · ' + p.titel : '');
       const o = document.createElement('option'); o.value = 'p:' + p.id; o.textContent = 'Ganzes Projekt ' + (p.name || p.id); g.append(o);
@@ -4396,8 +4446,15 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('lkScrim').hidden) closeLink(); });
   $('lkOk').addEventListener('click', async () => {
     const v = $('lkSel').value; if (!v || !lkPfad) return;
-    const p = lkPfad; closeLink();
-    try { const w = await linkTo(v, [p]); if (w) fMsg(baseName(p) + ' ist mit ' + w + ' verknüpft.'); } catch (_) { fMsg('Verknüpfen ging nicht.'); }
+    const p = lkPfad, titel = lkTitel, modus = lkModus; closeLink();
+    if (modus === 'aufgabe') {
+      try {
+        await db.collection('aufgaben').add({ projekt: v.slice(2), text: titel || 'Mail', erledigt: false, faellig: '', erstellt: new Date().toISOString(), anhaenge: [{ id: uid(), art: 'link', name: '✉ ' + (titel || 'Mail'), ziel: p }] });
+        mailMsg('Aufgabe erstellt.');
+      } catch (_) { mailMsg('Aufgabe erstellen ging nicht.'); }
+      return;
+    }
+    try { const w = await linkTo(v, [titel ? { ziel: p, name: '✉ ' + titel } : p]); if (w) { fMsg((titel || baseName(p)) + ' ist mit ' + w + ' verknüpft.'); if (titel) mailMsg('Verknüpft mit ' + w + '.'); } } catch (_) { fMsg('Verknüpfen ging nicht.'); }
   });
 
   // Projektseite: alle verknüpften Dateien des Projekts (am Projekt und an seinen Aufgaben); Dateien aus dem Explorer hierher ziehen
@@ -4418,7 +4475,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
         extra.push(x);
       }
       const web = /^https?:/i.test(a.ziel);
-      box.append(fileRow(web ? '🔗' : /\.[a-z0-9]{1,5}$/i.test(a.ziel) ? '📄' : '📁', a.name, [t ? 'Aufgabe: ' + t.text : 'Projekt', a.ziel],
+      box.append(fileRow(/^outlook:/i.test(a.ziel) ? '✉️' : web ? '🔗' : /\.[a-z0-9]{1,5}$/i.test(a.ziel) ? '📄' : '📁', a.name, [t ? 'Aufgabe: ' + t.text : 'Projekt', /^outlook:/i.test(a.ziel) ? 'Mail in Outlook' : a.ziel],
         () => openFile(a.ziel), extra));
     });
   }
@@ -4431,6 +4488,92 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       const pfade = [...(e.dataTransfer?.files || [])].map((f) => window.native.pathOf(f)).filter(Boolean);
       if (pfade.length && focusP) { try { await linkTo('p:' + focusP, pfade); } catch (_) {} }
     });
+  }
+  // Seite «Mails»: Outlook-Posteingang dieses PCs (nur lesen; öffnen, antworten und schreiben passiert in Outlook)
+  const MAIL = !!(window.native && window.native.mailListe);
+  if (MAIL) $('sideMail').hidden = false;
+  let mailOrdner = 'inbox', mailDaten = { inbox: null, sent: null }, mailSel = null, mailLaedt = false, mailZeit = 0;
+  const mailMsg = (t) => { const h = $('mailHint'); h.textContent = t; clearTimeout(mailMsg.t); mailMsg.t = setTimeout(() => { h.textContent = 'Aus deinem Outlook auf diesem PC'; }, 5000); };
+  const mailWann = (iso) => {
+    if (!iso) return ''; const d = new Date(iso); if (isNaN(d)) return '';
+    if (isoDay(d) === isoDay()) return d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+    const g = new Date(); g.setDate(g.getDate() - 1); if (isoDay(d) === isoDay(g)) return 'Gestern';
+    return d.toLocaleDateString('de-CH', { day: 'numeric', month: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : '2-digit' });
+  };
+  const mailVerk = (id) => {
+    const z = 'outlook:' + id, wo = [];
+    allProjects.forEach((p) => { if ((p.dateien || []).some((a) => a.ziel === z)) wo.push(p.name || p.id); });
+    allTasks.forEach((t) => { if ((t.anhaenge || []).some((a) => a.ziel === z)) wo.push('Aufgabe «' + (t.text || '').slice(0, 40) + '»'); });
+    return wo;
+  };
+  const mailListeZeigen = () => {
+    const box = $('mailList'), d = mailDaten[mailOrdner];
+    if (!d) { box.replaceChildren(el('div', 'leer', mailLaedt ? 'Mails werden aus Outlook geholt …' : '')); return; }
+    if (!d.ok) { box.replaceChildren(el('div', 'leer', d.error || 'Outlook antwortet nicht.')); return; }
+    const q = $('mailSuch').value.trim().toLowerCase();
+    const list = (d.mails || []).filter((m) => !q || [m.betreff, m.von, m.an].join(' ').toLowerCase().includes(q));
+    box.replaceChildren();
+    if (!list.length) { box.append(el('div', 'leer', q ? 'Nichts gefunden.' : 'Keine Mails.')); return; }
+    list.forEach((m) => {
+      const b = el('button', 'mail-it' + (m.neu ? ' neu' : '') + (mailSel === m.id ? ' sel' : '')); b.type = 'button'; b.setAttribute('role', 'listitem');
+      const k = el('div', 'k'); k.append(el('b', '', (mailOrdner === 'sent' ? 'An: ' + (m.an || '') : m.von) || '(unbekannt)'), el('span', '', (m.anh ? '📎 ' : '') + mailWann(m.zeit)));
+      b.append(k, el('div', 'b', m.betreff || '(ohne Betreff)'));
+      b.addEventListener('click', () => mailZeigen(m));
+      b.addEventListener('dblclick', () => window.native.mailOeffnen(m.id));
+      box.append(b);
+    });
+  };
+  const mailLaden = async (still) => {
+    if (mailLaedt) return; mailLaedt = true;
+    const o = mailOrdner;
+    if (!still || !mailDaten[o]) { if (!mailDaten[o]) mailListeZeigen(); $('mailReload').textContent = 'Lädt …'; }
+    const r = await window.native.mailListe({ ordner: o, anzahl: 100 });
+    mailLaedt = false; $('mailReload').textContent = 'Aktualisieren';
+    if (!r || (!r.ok && still && mailDaten[o] && mailDaten[o].ok)) return;
+    if (r.ok && !Array.isArray(r.mails)) r.mails = r.mails ? [r.mails] : [];
+    mailDaten[o] = r; mailZeit = Date.now();
+    if (o === 'inbox' && r.ok) $('sideMailN').textContent = r.mails.filter((m) => m.neu).length || '';
+    if (o === mailOrdner) mailListeZeigen();
+  };
+  const mailZeigen = async (m) => {
+    mailSel = m.id; mailListeZeigen();
+    const box = $('mailRead');
+    box.replaceChildren(el('h3', '', m.betreff || '(ohne Betreff)'), el('div', 'meta', 'Lädt …'));
+    const r = await window.native.mailDetail(m.id);
+    if (mailSel !== m.id) return;
+    if (!r || !r.ok) { box.replaceChildren(el('h3', '', m.betreff || '(ohne Betreff)'), el('p', 'err', (r && r.error) || 'Die Mail konnte nicht geladen werden.')); return; }
+    if (m.neu) { m.neu = false; mailListeZeigen(); const d = mailDaten.inbox; if (d && d.ok) $('sideMailN').textContent = d.mails.filter((y) => y.neu).length || ''; }
+    const x = r.mail, meta = el('div', 'meta');
+    meta.append(el('div', '', 'Von: ' + (x.von || '')), el('div', '', 'An: ' + (x.an || '')));
+    if (x.cc) meta.append(el('div', '', 'Cc: ' + x.cc));
+    if (x.zeit) meta.append(el('div', '', new Date(x.zeit).toLocaleString('de-CH', { weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })));
+    const acts = el('div', 'acts');
+    const knopf = (t, cls, fn) => { const b = el('button', 'btn' + (cls ? ' ' + cls : ''), t); b.type = 'button'; b.addEventListener('click', fn); acts.append(b); };
+    const fehler = (res) => { if (res && !res.ok) mailMsg(res.error || 'Outlook antwortet nicht.'); };
+    knopf('In Outlook öffnen', 'primary', async () => fehler(await window.native.mailOeffnen(x.id)));
+    knopf('Antworten', '', async () => fehler(await window.native.mailAntworten(x.id, false)));
+    knopf('Allen antworten', '', async () => fehler(await window.native.mailAntworten(x.id, true)));
+    if (canWrite) {
+      knopf('Verknüpfen …', 'ghost', () => openLink('outlook:' + x.id, x.betreff || 'Mail'));
+      knopf('Als Aufgabe …', 'ghost', () => openLink('outlook:' + x.id, x.betreff || 'Mail', 'aufgabe'));
+    }
+    const parts = [el('h3', '', x.betreff || '(ohne Betreff)'), meta, acts];
+    const wo = mailVerk(x.id); if (wo.length) parts.push(el('p', 'verk', 'Verknüpft mit: ' + wo.join(', ')));
+    const anh = Array.isArray(x.anhaenge) ? x.anhaenge : x.anhaenge ? [x.anhaenge] : [];
+    if (anh.length) parts.push(el('p', 'anh', '📎 ' + anh.join(', ') + ' (in Outlook öffnen)'));
+    parts.push(el('div', 'txt', x.text || ''));
+    box.replaceChildren(...parts);
+  };
+  function mailSeite() { if (!MAIL) return; mailListeZeigen(); if (!mailDaten[mailOrdner] || Date.now() - mailZeit > 60000) mailLaden(!!mailDaten[mailOrdner]); }
+  if (MAIL) {
+    const ordner = (o) => { mailOrdner = o; $('mailIn').setAttribute('aria-pressed', String(o === 'inbox')); $('mailOut').setAttribute('aria-pressed', String(o === 'sent')); mailSel = null; mailListeZeigen(); if (!mailDaten[o]) mailLaden(); };
+    $('mailIn').addEventListener('click', () => ordner('inbox'));
+    $('mailOut').addEventListener('click', () => ordner('sent'));
+    $('mailSuch').addEventListener('input', mailListeZeigen);
+    $('mailReload').addEventListener('click', () => mailLaden());
+    $('mailNeu').addEventListener('click', async () => { const r = await window.native.mailNeu({}); if (r && !r.ok) mailMsg(r.error || 'Outlook antwortet nicht.'); });
+    // alle 2 Minuten nachschauen, solange die Seite offen ist
+    setInterval(() => { if (page === 'mail' && !document.hidden) mailLaden(true); }, 120000);
   }
   $('side').addEventListener('click', (e) => { const b = e.target.closest('.side-it'); if (b) setPage(b.dataset.pg); });
 

@@ -463,8 +463,10 @@ ipcMain.handle('save-file', async (_e, { filename, bytes }) => {
 
 // Server paths: folders open in Explorer, documents in their program; programs and scripts are only shown, never started
 const RUNNABLE = /\.(exe|com|bat|cmd|ps1|psm1|vbs|vbe|js|jse|wsf|wsh|msi|msp|scr|lnk|hta|cpl|reg|jar|appref-ms)$/i;
+const mail = require('./mail')({ ipcMain });
 ipcMain.handle('open-path', async (_e, p) => {
   p = String(p || '').trim().replace(/^"(.*)"$/, '$1');
+  if (/^outlook:/i.test(p)) return mail.oeffnen(p);
   if (/^https?:\/\//i.test(p)) { await shell.openExternal(p); return { ok: true }; }
   if (/^file:/i.test(p)) { try { p = require('url').fileURLToPath(p); } catch (_) {} }
   if (!fs.existsSync(p)) return { ok: false, error: 'Pfad nicht gefunden. Ist der Server verbunden?' };
