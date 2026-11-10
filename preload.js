@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('native', {
   onAktivitaet: (cb) => ipcRenderer.on('aktivitaet', (_e, a) => cb(a)),
   updateBereit: () => ipcRenderer.invoke('update-bereit'),
   onUpdateBereit: (cb) => ipcRenderer.on('update-bereit', (_e, v) => cb(v)),
+  bautenAbgleichen: () => ipcRenderer.invoke('bauten-abgleichen'),
   updateInstallieren: () => ipcRenderer.invoke('update-installieren'),
   authLogout: () => ipcRenderer.invoke('auth-logout'),
   me: () => ipcRenderer.invoke('auth-me'),

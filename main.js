@@ -500,6 +500,18 @@ ipcMain.handle('choose-data-dir', async () => {
   return dataDir();
 });
 
+// Projekte und Studien aus G:\01 Bauten nach Nummern (beim Start, alle 10 Minuten und auf Knopfdruck)
+const bauten = require('./bauten');
+const bautenAbgleich = () => {
+  if (!online) return { ok: false, error: 'Der Server ist nicht erreichbar.' };
+  let r; try { r = bauten.abgleichen(store); } catch (e) { return { ok: false, error: 'Abgleich ging nicht.' }; }
+  if (r.fehler) return { ok: false, error: r.fehler };
+  if (r.ops.length) { commit(r.ops); changed(); }
+  return { ok: true, neu: r.neu, geaendert: r.ops.length - r.neu, bauten: r.bauten, studien: r.studien };
+};
+ipcMain.handle('bauten-abgleichen', () => { const m = me(); if (!m) return { ok: false }; return bautenAbgleich(); });
+setInterval(() => { try { bautenAbgleich(); } catch (_) {} }, 10 * 60 * 1000);
+
 // Was das Programm gerade macht (Startbildschirm und Hinweis oben rechts) und Updates über G:
 const upd = require('./buero-update')({ app, BUERO, dialog });
 let aktiv = null, updGemeldet = null;
@@ -556,6 +568,8 @@ app.whenReady().then(() => {
     setAktiv('Lade die Daten …');
     setTimeout(() => {
       start();
+      setAktiv('Projekte mit G: abgleichen …');
+      try { bautenAbgleich(); } catch (_) {}
       setAktiv(null);
       showPage();
       updPruefen();

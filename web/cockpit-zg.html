@@ -84,6 +84,11 @@ h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter
 .filters { display: inline-flex; background: var(--fill2); border-radius: 9px; padding: 2px; gap: 0; }
 .chip { font-size: 13px; font-weight: 500; padding: 5px 14px; border-radius: 7px; border: 0; background: transparent; color: var(--fg); }
 .chip[aria-pressed="true"] { background: var(--paper); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); font-weight: 600; }
+.art-seg { margin-left: auto; } body.pg-projekt .art-seg { display: none; }
+.side-h.studien { margin-top: 10px; }
+.wahl-gr { margin: 14px 4px 4px; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.wahl-gr:first-child { margin-top: 0; }
+.wahl-sync { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 
 /* Project widgets */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; align-items: start; }
@@ -927,6 +932,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       <div class="wahl-fuer" id="wahlFuerBox" hidden><label for="wahlFuer">Für</label><select id="wahlFuer"></select></div>
       <div id="wahlList"></div>
       <p class="hint" id="wahlMsg" aria-live="polite"></p>
+      <div class="wahl-sync" id="wahlSyncBox" hidden><button type="button" class="btn" id="wahlSync">Jetzt mit G: abgleichen</button><span class="hint" id="wahlSyncMsg" aria-live="polite">Neue Ordner unter «G:\01 Bauten nach Nummern» werden automatisch zu Projekten (beim Start und alle 10 Minuten).</span></div>
     </div>
   </section>
 
@@ -1011,6 +1017,10 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   <section id="projekte">
     <div class="sec-head">
       <h2 id="projTitle">Projekte</h2>
+      <div class="filters art-seg" role="group" aria-label="Projekte oder Studien">
+        <button type="button" class="chip" data-art="bau" aria-pressed="true">Projekte</button>
+        <button type="button" class="chip" data-art="studie" aria-pressed="false">Studien</button>
+      </div>
       <div class="filters" role="group" aria-label="Darstellung">
         <button type="button" class="chip" data-v="karten" aria-pressed="true">Karten</button>
         <button type="button" class="chip" data-v="mindmap" aria-pressed="false">Mindmap</button>
@@ -1480,6 +1490,10 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   // Chef/Administrator ohne Auswahl sehen alle.
   const istBoss = () => !!IST && (IST.rolle === 'chef' || IST.rolle === 'admin');
   const dabei = (p, id) => Array.isArray(p.mitglieder) && p.mitglieder.includes(id);
+  // Reiter «Projekte» (Bauten) und «Studien»
+  const AK2 = 'cockpit-zg-art';
+  let artSel = 'bau'; try { if (localStorage.getItem(AK2) === 'studie') artSel = 'studie'; } catch (_) {}
+  const artOf = (p) => (p && p.art === 'studie' ? 'studie' : 'bau');
   const meinP = (p) => !IST || dabei(p, IST.id) || (istBoss() && !allProjects.some((x) => dabei(x, IST.id)));
   const eigen = (x) => !IST || (x.von ? x.von === IST.id : IST.rolle === 'admin');
   const showDone = new Set(), addArt = {};
@@ -3782,6 +3796,15 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   $('calNext').addEventListener('click', () => calShift(1));
   $('calToday').addEventListener('click', () => { const d = new Date(); calMonth = new Date(d.getFullYear(), d.getMonth(), 1); calWeek = d; calAdd = null; calEdit = null; render(); });
 
+  const setArt = (a, still) => {
+    artSel = a === 'studie' ? 'studie' : 'bau';
+    try { localStorage.setItem(AK2, artSel); } catch (_) {}
+    document.querySelectorAll('.chip[data-art]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.art === artSel)));
+    projects = allProjects.filter((p) => meinP(p) && artOf(p) === artSel);
+    if (!focusP) $('projTitle').textContent = artSel === 'studie' ? 'Studien' : 'Projekte';
+    if (!still) render();
+  };
+  document.querySelectorAll('.chip[data-art]').forEach((x) => x.addEventListener('click', () => setArt(x.dataset.art)));
   const setView = (v) => {
     view = ['mindmap', 'kalender'].includes(v) ? v : 'karten';
     document.querySelectorAll('.chip[data-v]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.v === view)));
@@ -3801,15 +3824,18 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   const renderSide = () => {
     const box = $('sideProj'); if (!box) return;
     box.replaceChildren();
-    projects.forEach((p) => {
+    const mine = allProjects.filter(meinP);
+    const studien = mine.filter((p) => artOf(p) === 'studie');
+    mine.filter((p) => artOf(p) === 'bau').concat(studien.length ? [null] : [], studien).forEach((p) => {
+      if (!p) { box.append(el('div', 'side-h studien', 'Studien')); return; }
       const b = el('button', 'side-it'); b.type = 'button'; b.dataset.pg = 'p:' + p.id;
       const c = farbeOf(p); const d = el('span', 'pdot'); if (c) d.style.setProperty('--pc', c);
       const n = tasks.filter((t) => t.projekt === p.id && !t.erledigt).length;
       b.append(d, el('span', 'lb', p.name || p.id), el('span', 'nm', n ? String(n) : ''));
-      b.title = (p.name || p.id) + (p.titel ? ' · ' + p.titel : '') + (n ? ' · ' + n + ' offen' : '');
+      b.title = (p.nummer ? p.nummer + ' ' : '') + (p.name || p.id) + (p.titel ? ' · ' + p.titel : '') + (n ? ' · ' + n + ' offen' : '');
       box.append(b);
     });
-    $('sideProjH').hidden = !projects.length;
+    $('sideProjH').hidden = !mine.some((p) => artOf(p) === 'bau');
     document.querySelectorAll('#side .side-it').forEach((x) => x.setAttribute('aria-current', x.dataset.pg === page ? 'page' : 'false'));
     $('sideZeit').textContent = $('dec').textContent !== '–' ? $('dec').textContent + ' h' : '';
     if (focusP && !$('pordner').hidden !== !!(projects.find((x) => x.id === focusP) || {}).ordner) showOrdner();
@@ -3832,10 +3858,12 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     list.replaceChildren();
     if (!allProjects.length) { list.append(el('p', 'leer', 'Noch keine Projekte. Neue Projekte eröffnen der Administrator oder der Chef.')); return; }
     const name = (id) => { const u = wahlTeam.find((x) => x.id === id); return u ? u.kuerzel || u.name : null; };
-    allProjects.forEach((p) => {
+    const nachNr = (a, b) => String(b.nummer || '').localeCompare(String(a.nummer || '')) || String(a.name || '').localeCompare(String(b.name || ''), 'de');
+    const gruppen = [['Projekte', allProjects.filter((p) => artOf(p) === 'bau').sort(nachNr)], ['Studien', allProjects.filter((p) => artOf(p) === 'studie').sort(nachNr)]];
+    gruppen.forEach(([gname, liste]) => { if (!liste.length) return; list.append(el('div', 'wahl-gr', gname + ' (' + liste.length + ')')); liste.forEach((p) => {
       const l = el('label', 'wahl-it'); const c = document.createElement('input'); c.type = 'checkbox'; c.checked = dabei(p, wer);
       const d = el('span', 'pdot'); const fc = farbeOf(p); if (fc) d.style.setProperty('--pc', fc);
-      const t = el('span', 't', p.name || p.id); if (p.titel) t.append(el('small', '', p.titel));
+      const t = el('span', 't', (p.nummer ? p.nummer + ' ' : '') + (p.name || p.id)); if (p.titel) t.append(el('small', '', p.titel));
       const andere = (Array.isArray(p.mitglieder) ? p.mitglieder : []).map(name).filter(Boolean);
       l.append(c, d, t, el('span', 'w', andere.join(', ')));
       c.addEventListener('change', async () => {
@@ -3845,14 +3873,24 @@ body.r-mitarbeiter #pDelete { display: none !important; }
         catch (_) { c.checked = !c.checked; $('wahlMsg').textContent = 'Speichern ging nicht.'; }
       });
       list.append(l);
-    });
+    }); });
   }
   $('wahlFuer').addEventListener('change', renderWahl);
+  if (window.native && window.native.bautenAbgleichen) {
+    $('wahlSyncBox').hidden = false;
+    $('wahlSync').addEventListener('click', async () => {
+      $('wahlSync').disabled = true; $('wahlSyncMsg').textContent = 'Lese die Ordner auf G: …';
+      const r = await window.native.bautenAbgleichen();
+      $('wahlSync').disabled = false;
+      $('wahlSyncMsg').textContent = r && r.ok ? r.bauten + ' Ordner unter Bauten, ' + r.studien + ' Studien gelesen. ' + (r.neu ? r.neu + ' neu angelegt' : 'Nichts neu') + (r.geaendert ? ', ' + r.geaendert + ' ergänzt.' : '.') : (r && r.error) || 'Ging nicht.';
+    });
+  }
   const setPage = (pg) => {
     const wasP = !!focusP;
     page = pg || 'home';
     if ((page === 'team' || page === 'chef') && !bossView()) page = 'home';
     focusP = page.startsWith('p:') ? page.slice(2) : null;
+    if (focusP) { const fp = allProjects.find((x) => x.id === focusP); if (fp && artOf(fp) !== artSel) setArt(artOf(fp), true); }
     document.body.classList.remove('pg-home', 'pg-profil', 'pg-zeit', 'pg-projekt', 'pg-server', 'pg-team', 'pg-chef', 'pg-wahl');
     document.body.classList.add(focusP ? 'pg-projekt' : 'pg-' + page);
     try { localStorage.setItem(PK, page); } catch (_) {}
@@ -3860,7 +3898,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       // a project page always shows that project as a card
       view = 'karten'; $('grid').hidden = false; mm.hidden = true; $('cal').hidden = true;
     } else {
-      $('projTitle').textContent = 'Projekte';
+      $('projTitle').textContent = artSel === 'studie' ? 'Studien' : 'Projekte';
       if (page === 'server') odPfad = null;
       if (wasP) { let v = 'karten'; try { v = localStorage.getItem(VK) || 'karten'; } catch (_) {} setView(v); }
     }
@@ -4464,6 +4502,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     });
   }
 
+  setArt(artSel, true);
   try { const pg = localStorage.getItem(PK); setPage(pg && pg !== 'profil' && pg !== 'zeit' && pg !== 'server' && !pg.startsWith('p:') ? 'home' : pg || 'home'); } catch (_) { setPage('home'); }
 
   // A short tick on touch, where the device supports it
@@ -4501,7 +4540,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     const ready = () => { if (gotP && gotT) { loaded = true; render(); } };
     db.collection('projekte').orderBy('reihenfolge').onSnapshot((snap) => {
       allProjects = snap.docs.map((x) => ({ id: x.id, ...x.data() })).sort((a, b) => (a.reihenfolge || 0) - (b.reihenfolge || 0));
-      projects = allProjects.filter(meinP);
+      projects = allProjects.filter((p) => meinP(p) && artOf(p) === artSel);
       if (page === 'wahl') renderWahl();
       gotP = true; ready(); todayHook();
     }, () => { gotP = true; ready(); });
