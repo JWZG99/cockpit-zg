@@ -4246,9 +4246,8 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (!list.length) { box.append(el('div', 'leer', q ? 'Nichts gefunden.' : 'Der Ordner ist leer. Rechtsklick: neuer Ordner.')); return; }
     const server = page === 'server';
     list.slice(0, 500).forEach((f) => {
-      const lk = el('button', 'lk', 'Verknüpfen'); lk.type = 'button'; lk.hidden = !canWrite; lk.addEventListener('click', () => openLink(f.path));
       const row = fileRow(f.ordner ? '📁' : '📄', f.name, [f.ordner ? '' : fmtGr(f.groesse), f.geaendert ? new Date(f.geaendert).toLocaleDateString('de-CH') : ''],
-        () => (f.ordner ? showOrdner(f.path) : openFile(f.path)), [lk]);
+        () => (f.ordner ? showOrdner(f.path) : openFile(f.path)), []);
       row.addEventListener('contextmenu', (e) => itemMenu(e, f, row));
       if (window.native.movePath) {
         row.draggable = true;
@@ -4351,7 +4350,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     const rows = [];
     (Array.isArray(p.dateien) ? p.dateien : []).forEach((a) => rows.push({ a, wo: 'Projekt' }));
     tasks.filter((t) => t.projekt === p.id).forEach((t) => (Array.isArray(t.anhaenge) ? t.anhaenge : []).filter((a) => a.art === 'link').forEach((a) => rows.push({ a, t })));
-    if (!rows.length) { box.append(el('div', 'leer', 'Noch nichts verknüpft. Zieh Dateien aus dem Explorer hierher, oder klick im Projektordner oder auf der Seite «Server» auf «Verknüpfen».')); return; }
+    if (!rows.length) { box.append(el('div', 'leer', 'Noch nichts verknüpft. Zieh Dateien aus dem Explorer hierher, oder mach im Projektordner oder auf der Seite «Server» einen Rechtsklick auf eine Datei: «Verknüpfen …».')); return; }
     rows.forEach(({ a, t }) => {
       const extra = [];
       if (!t && canWrite) {
