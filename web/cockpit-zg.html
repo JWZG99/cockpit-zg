@@ -876,6 +876,11 @@ body.pg-projekt #pordner .fit { padding: 6px 12px; font-size: 14px; }
 body.pg-projekt .pp-tasks { min-height: 220px; }
 #pordner.pp-zu .flist, #pordner.pp-zu .fmsg, #pordner.pp-zu .such, #pordner.pp-zu #pordnerUp, #pordner.pp-zu #pordnerNeu { display: none; }
 #pordnerTw { display: none; }
+#pordnerLeer { display: none; }
+body.pg-projekt #pordnerLeer:not([hidden]) { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); background-color: var(--glass-strong); box-shadow: var(--glass-edge), var(--glass-shadow); font-size: 14px; }
+#pordnerLeer span { color: var(--muted); margin-right: auto; }
+@media (min-width: 1101px) { body.pg-projekt #pordnerLeer { grid-column: 1; grid-row: 2; } }
+@media (max-width: 1100px) { body.pg-projekt #pordnerLeer { order: 2; } }
 body.pg-projekt #pordnerTw { display: inline-grid; }
 @media (min-width: 1101px) {
   body.pg-projekt { overflow: hidden; }
@@ -1235,6 +1240,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       <div class="flist" id="pverkList"></div>
     </section>
   </aside>
+  <section id="pordnerLeer" hidden aria-label="Projektordner"><b>Projektordner</b><span>Noch kein Ordner verknüpft.</span><button type="button" class="link" id="pordnerWahl">Ordner wählen …</button></section>
   <section id="pordner" hidden aria-labelledby="pordnerT">
     <div class="stabs" id="srvTabs" role="tablist" aria-label="Server-Tabs" hidden></div>
     <h3><button type="button" class="pp-tw open" id="pordnerTw" aria-expanded="true" aria-label="Projektordner einklappen">▶</button><span class="tt" id="pordnerT">Projektordner</span><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
@@ -4584,6 +4590,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   async function showOrdner(sub) {
     const sec = $('pordner'); const p = focusP && projects.find((x) => x.id === focusP);
     const server = page === 'server';
+    $('pordnerLeer').hidden = !(NATIVE_FS && p && !p.ordner && canWrite);
     if (!NATIVE_FS || !(server || (p && p.ordner))) { sec.hidden = true; odPfad = null; $('srvTabs').hidden = true; closeCtx(); return; }
     sec.hidden = false;
     let root = null;
@@ -4608,6 +4615,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (!r.ok) { odItems = []; box.replaceChildren(el('div', 'leer', r.error)); return; }
     odItems = r.items; drawOrdner();
   }
+  $('pordnerWahl').addEventListener('click', () => { const p = focusP && projects.find((x) => x.id === focusP); if (p) openPanel(p); });
   $('pordnerSuch').addEventListener('input', drawOrdner);
   $('pordnerPfad').addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { e.preventDefault(); endEdit(); return; }
