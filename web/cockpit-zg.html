@@ -167,7 +167,8 @@ h2 { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter
 #pverk { max-width: 1000px; margin: 18px 0 0; }
 #pverk h3 { margin: 0 4px 8px; font-size: 17px; display: flex; gap: 10px; flex-wrap: wrap; }
 #pverk .flist { background: var(--card, #fff); border-radius: 14px; overflow: hidden; outline: 2px dashed transparent; outline-offset: -2px; }
-#pverk .flist.drop { outline-color: var(--accent, #0a84ff); }
+#pverk .flist.drop, #pverk.drop { outline-color: var(--accent, #0a84ff); }
+#pverk.drop { outline: 2px dashed var(--accent, #0a84ff); outline-offset: -2px; }
 #pverk .fit { box-sizing: border-box; display: grid; gap: 10px; align-items: center; width: 100%; padding: 9px 14px; border: 0; border-top: 1px solid var(--line, rgba(0,0,0,.08)); background: none; font: inherit; font-size: 15px; text-align: left; cursor: pointer; color: inherit; }
 #pverk .fit:first-child { border-top: 0; } #pverk .fit:hover { background: var(--fill); }
 #pverk .fit .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -4708,13 +4709,15 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     });
   }
   if (NATIVE_FS && window.native.pathOf) {
-    const vl = $('pverkList');
-    vl.addEventListener('dragover', (e) => { if (canWrite && focusP && e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); vl.classList.add('drop'); } });
-    vl.addEventListener('dragleave', () => vl.classList.remove('drop'));
+    // ganze Karte «Verknüpfte Dateien» ist Ablagefläche: Dateien aus dem Explorer oder Einträge aus der Projektordner-Liste
+    const vl = $('pverk');
+    const okDrag = (e) => canWrite && focusP && (dragItem || e.dataTransfer?.types?.includes('Files'));
+    vl.addEventListener('dragover', (e) => { if (okDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; vl.classList.add('drop'); } });
+    vl.addEventListener('dragleave', (e) => { if (!vl.contains(e.relatedTarget)) vl.classList.remove('drop'); });
     vl.addEventListener('drop', async (e) => {
       e.preventDefault(); vl.classList.remove('drop');
-      const pfade = [...(e.dataTransfer?.files || [])].map((f) => window.native.pathOf(f)).filter(Boolean);
-      if (pfade.length && focusP) { try { await linkTo('p:' + focusP, pfade); } catch (_) {} }
+      const pfade = dragItem && dragItem.path ? [dragItem.path] : [...(e.dataTransfer?.files || [])].map((f) => window.native.pathOf(f)).filter(Boolean);
+      if (pfade.length && focusP) { try { const w = await linkTo('p:' + focusP, pfade); if (w) fMsg('«' + baseName(pfade[0]) + '» ist mit ' + w + ' verknüpft.'); } catch (_) {} }
     });
   }
   // Seite «Mails»: Outlook-Posteingang dieses PCs (nur lesen; öffnen, antworten und schreiben passiert in Outlook)
