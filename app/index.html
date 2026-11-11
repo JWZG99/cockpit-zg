@@ -910,7 +910,7 @@ body.pg-projekt #pordnerTw { display: inline-grid; }
 }
 @media (prefers-reduced-motion: reduce) { .pp-tw { transition: none; } }
 /* 2.18: Shortcuts, Suche, Anheften */
-#pordner .crumbs button.home { position: sticky; left: 0; z-index: 1; max-width: 260px; font-weight: 600; background: var(--card, #fff); box-shadow: 6px 0 6px -4px rgba(0,0,0,.12); }
+#pordner .crumbs button.home { position: sticky; left: 0; z-index: 1; font-size: 16px; padding: 3px 8px; background: var(--card, #fff); box-shadow: 6px 0 6px -4px rgba(0,0,0,.12); }
 #pordner .crumbs button.home + .sep { margin-left: 2px; }
 
 #pverk h3 .link { margin-left: auto; }
@@ -4455,7 +4455,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     teile.forEach((t, i) => {
       if (i) nav.append(el('span', 'sep', '›'));
       const home = !!root && i === 0;
-      const b = el('button', home ? 'home' : '', home ? '🏠 ' + t.name : t.name); b.type = 'button'; b.title = home ? 'Zum Projektordner (Stamm): ' + t.pfad : t.pfad;
+      const b = el('button', home ? 'home' : '', home ? '🏠' : t.name); b.type = 'button'; b.title = home ? 'Zum Projektordner (Stamm): ' + t.name : t.pfad; if (home) b.setAttribute('aria-label', 'Zum Projektordner (Stamm): ' + t.name);
       b.addEventListener('click', (e) => { e.stopPropagation(); showOrdner(t.pfad); });
       dropZiel(b, t.pfad, null);
       nav.append(b);
