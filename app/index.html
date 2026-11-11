@@ -4468,13 +4468,13 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   // Klick neben das offene Menü schliesst es nur, der Klick öffnet nichts (kein Ordner, keine Datei)
   let ctxSchluck = 0;
   document.addEventListener('mousedown', (e) => {
-    if (ctx.hidden || ctx.contains(e.target)) return;
+    if (ctx.hidden || ctx.contains(e.target)) { ctxSchluck = 0; return; }
     closeCtx();
     if (e.button === 0) { ctxSchluck = Date.now(); e.preventDefault(); e.stopPropagation(); }
   }, true);
   const ctxWeg = (e) => { if (ctxSchluck && Date.now() - ctxSchluck < 1500) { e.preventDefault(); e.stopPropagation(); if (e.type === 'click') ctxSchluck = 0; } };
   ['mouseup', 'click'].forEach((t) => document.addEventListener(t, ctxWeg, true));
-  document.addEventListener('dragstart', (e) => { if (ctxSchluck) { e.preventDefault(); } }, true);
+  document.addEventListener('dragstart', (e) => { if (ctxSchluck && Date.now() - ctxSchluck < 600) { e.preventDefault(); } }, true);
   document.addEventListener('keydown', (e) => {
     if (ctx.hidden) return;
     if (e.key === 'Escape') { e.preventDefault(); closeCtx(); return; }
