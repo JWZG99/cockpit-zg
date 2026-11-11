@@ -901,8 +901,10 @@ body.pg-projekt #pordnerTw { display: inline-grid; }
 }
 @media (prefers-reduced-motion: reduce) { .pp-tw { transition: none; } }
 /* 2.18: Shortcuts, Suche, Anheften */
-#pordner .crumbs button.home { position: sticky; left: 0; z-index: 1; font-size: 16px; padding: 3px 8px; background: var(--card, #fff); box-shadow: 6px 0 6px -4px rgba(0,0,0,.12); }
-#pordner .crumbs button.home + .sep { margin-left: 2px; }
+#pordnerHome { flex: none; border: 0; background: none; border-radius: 9px; font-size: 18px; line-height: 1; padding: 5px 7px; cursor: pointer; }
+#pordnerHome:hover, #pordnerHome:focus-visible { background: var(--fill); }
+#pordnerHome.drop { background: color-mix(in srgb, var(--accent, #0a84ff) 18%, transparent); outline: 2px solid var(--accent, #0a84ff); outline-offset: -2px; }
+#pordner.pp-zu #pordnerHome { display: none; }
 
 #pverk h3 .link { margin-left: auto; }
 #pverk .fit.sc { grid-template-columns: 22px minmax(0, 1fr) auto; }
@@ -1264,7 +1266,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   <section id="pordnerLeer" hidden aria-label="Projektordner"><b>Projektordner</b><span>Noch kein Ordner verknüpft.</span><button type="button" class="link" id="pordnerWahl">Ordner wählen …</button></section>
   <section id="pordner" hidden aria-labelledby="pordnerT">
     <div class="stabs" id="srvTabs" role="tablist" aria-label="Server-Tabs" hidden></div>
-    <h3><button type="button" class="pp-tw open" id="pordnerTw" aria-expanded="true" aria-label="Projektordner einklappen">▶</button><span class="tt" id="pordnerT">Projektordner</span><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
+    <h3><button type="button" class="pp-tw open" id="pordnerTw" aria-expanded="true" aria-label="Projektordner einklappen">▶</button><span class="tt" id="pordnerT">Projektordner</span><button type="button" class="pp-home" id="pordnerHome" hidden aria-label="Zum Projektordner (Stamm)" title="Zum Projektordner (Stamm)">🏠</button><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
     <div class="flist" id="pordnerList"></div>
     <p class="fmsg" id="pordnerMsg" aria-live="polite"></p>
     <div class="ctx" id="ctxMenu" role="menu" hidden></div>
@@ -4437,14 +4439,17 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     rest.split(/[\\/]/).filter(Boolean).forEach((seg) => { acc = acc ? acc + '\\' + seg : seg; out.push({ name: seg, pfad: acc }); });
     return out;
   };
+  let odRoot = null;
   const drawCrumbs = (root) => {
+    odRoot = root || null;
     const nav = $('pordnerCrumbs'); nav.replaceChildren();
+    const home = $('pordnerHome'); home.hidden = !root;
+    if (root) home.title = 'Zum Projektordner (Stamm): ' + baseName(root);
     let teile = pfadTeile(odPfad);
-    if (root) { const n = pfadTeile(root).length; teile = teile.slice(Math.max(0, n - 1)); }
+    if (root) { const n = pfadTeile(root).length; teile = teile.slice(n); } // der Stamm ist das Häuschen, im Pfad steht nur, was darunter liegt
     teile.forEach((t, i) => {
       if (i) nav.append(el('span', 'sep', '›'));
-      const home = !!root && i === 0;
-      const b = el('button', home ? 'home' : '', home ? '🏠' : t.name); b.type = 'button'; b.title = home ? 'Zum Projektordner (Stamm): ' + t.name : t.pfad; if (home) b.setAttribute('aria-label', 'Zum Projektordner (Stamm): ' + t.name);
+      const b = el('button', '', t.name); b.type = 'button'; b.title = t.pfad;
       b.addEventListener('click', (e) => { e.stopPropagation(); showOrdner(t.pfad); });
       dropZiel(b, t.pfad, null);
       nav.append(b);
@@ -4591,6 +4596,8 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     });
   };
   document.addEventListener('dragend', () => { dragItem = null; document.querySelectorAll('.drop').forEach((x) => x.classList.remove('drop')); });
+  $('pordnerHome').addEventListener('click', () => { if (odRoot) showOrdner(odRoot); });
+  dropZiel($('pordnerHome'), () => odRoot, null);
 
   // Suche im Projektordner (2.18): rekursiv ab dem Projektordner-Stamm, im Hauptprozess (asynchron, abbrechbar)
   let suchAktiv = false, suchErg = null, suchStatus = null, suchTok = '', suchZaehler = 0, suchTimer = null, suchFuer = '';
