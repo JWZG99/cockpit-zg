@@ -820,6 +820,89 @@ body.pg-zeit .taet { display: block; }
 .taet-z select, .taet-z input { font: inherit; font-size: 14px; min-height: 36px; box-sizing: border-box; width: 100%; padding: 6px 10px; border-radius: 9px; border: 0.5px solid var(--line); background: var(--fill); color: var(--fg); }
 .taet-z input.std { text-align: right; }
 @media (max-width: 640px) { .taet-z { grid-template-columns: minmax(0, 1fr) 76px; } .taet-z .tx { grid-column: 1 / -1; grid-row: 1; } }
+
+/* Projektseite 2.17: füllt das Fenster, nur die Listen scrollen */
+#ppSide, .pp-tw, .pp-tw0 { display: none; }
+body.pg-projekt #projekte, body.pg-projekt #grid { display: contents !important; }
+body.pg-projekt #projekte > .sec-head, body.pg-projekt .wrap > .top, body.pg-projekt #dataFoot { display: none !important; }
+body.pg-projekt .grid > .empty { grid-column: 1 / -1; }
+body.pg-projekt #ppSide { display: grid; gap: 12px; align-content: start; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+body.pg-projekt .pp-tw, body.pg-projekt .pp-tw0 { display: inline-grid; }
+body.pg-projekt .pp-tw, body.pg-projekt .pp-tw0 { width: 24px; height: 24px; place-items: center; flex: none; }
+.pp-tw { border: 0; border-radius: 7px; background: none; color: var(--muted); font-size: 11px; transition: transform .15s; padding: 0; }
+.pp-tw:hover { background: var(--fill); }
+.pp-tw.open { transform: rotate(90deg); }
+.link { border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 8px; }
+.link:hover { background: var(--fill); }
+.pp-head { padding: 12px 18px; display: grid; gap: 10px; flex: none; }
+.pp-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.pp-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; min-width: 0; margin-right: auto; }
+.pp-title h1 { margin: 0; font-family: var(--font-display); font-size: 26px; line-height: 1.15; font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
+.pp-adr { font-size: 17px; color: var(--muted); overflow-wrap: anywhere; min-width: 0; }
+.pp-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.pp-acts .btn { font-size: 13px; padding: 6px 12px; }
+.pp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; font-size: 14px; }
+.pp-phase { display: flex; align-items: center; gap: 12px; flex: 1 1 340px; min-width: 0; }
+.pp-phase b { white-space: nowrap; font-weight: 600; } .pp-phase b span { font-weight: 400; color: var(--muted); }
+.pp-phase .track { flex: 1; min-width: 90px; }
+.pp-range { color: var(--muted); white-space: nowrap; }
+.pp-resp { color: var(--muted); } .pp-resp b { color: var(--fg); font-weight: 500; }
+.pp-tasks { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.pp-th { display: flex; align-items: center; gap: 10px; padding: 12px 18px 6px; }
+.pp-th h2 { margin: 0; font-size: 16px; }
+.pp-th .cnt { color: var(--muted); font-size: 13px; margin-right: auto; }
+.pp-list { overflow: auto; min-height: 0; padding: 0 12px 6px 18px; }
+.pp-leer { margin: 10px 0; color: var(--muted); font-size: 14px; }
+.pp-add { padding: 0 18px 14px; border-top: 0.5px solid var(--line); }
+.pp-add .add-art { margin-top: 8px; }
+.task.pp { grid-template-columns: 24px auto minmax(0, 1fr) auto auto; gap: 8px; }
+.ppt { border-bottom: 0.5px solid var(--line); }
+.ppt > .task { border-bottom: 0; }
+.pp-subs { display: grid; gap: 1px; padding: 0 0 8px 62px; }
+.pp-sub { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+.pp-sub:hover { background: var(--fill); }
+.pp-sub .n { min-width: 0; overflow-wrap: anywhere; }
+.pp-sub.done .n { color: var(--muted); text-decoration: line-through; }
+.pp-sub input { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--idle); margin: 0; flex: none; display: grid; place-content: center; cursor: pointer; }
+.pp-sub input:checked { background: var(--accent); border-color: var(--accent); }
+.pp-sub input:checked::after { content: ""; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+.pp-box, body.pg-projekt #pverk, body.pg-projekt #pordner { background-color: var(--glass-strong); border-radius: var(--radius); box-shadow: var(--glass-edge), var(--glass-shadow); }
+.pp-box { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-height: 0; max-height: 45vh; }
+.pp-bh { display: flex; align-items: center; justify-content: space-between; }
+.pp-bh h3 { margin: 0; font-size: 16px; }
+.pp-in { overflow: auto; min-height: 0; }
+body.pg-projekt #pverk { margin: 0; max-width: none; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow: hidden; }
+body.pg-projekt #pverk h3 { margin: 0; font-size: 16px; }
+body.pg-projekt #pverk .flist { overflow: auto; min-height: 0; border-radius: 10px; }
+body.pg-projekt #pordner { margin: 0; max-width: none; padding: 8px 8px 4px; min-height: 0; display: flex; flex-direction: column; }
+body.pg-projekt #pordner h3 { font-size: 16px; margin: 0 4px 6px; }
+body.pg-projekt #pordner .flist { overflow: auto; min-height: 0; max-height: clamp(110px, 24vh, 340px); }
+body.pg-projekt #pordner h3 { gap: 4px 6px; }
+body.pg-projekt #pordner h3 .btn { font-size: 13px; padding: 4px 9px; white-space: nowrap; }
+body.pg-projekt #pordner .crumbs { flex: 1 1 110px; min-height: 30px; font-size: 13px; }
+body.pg-projekt #pordner .such { flex: 0 1 110px; font-size: 13px; padding: 4px 8px; }
+body.pg-projekt #pordner .fit { padding: 6px 12px; font-size: 14px; }
+body.pg-projekt .pp-tasks { min-height: 220px; }
+#pordner.pp-zu .flist, #pordner.pp-zu .fmsg, #pordner.pp-zu .such, #pordner.pp-zu #pordnerUp, #pordner.pp-zu #pordnerNeu { display: none; }
+#pordnerTw { display: none; }
+body.pg-projekt #pordnerTw { display: inline-grid; }
+@media (min-width: 1101px) {
+  body.pg-projekt { overflow: hidden; }
+  body.pg-projekt .shell { height: 100vh; min-height: 0; }
+  body.pg-projekt .wrap { height: 100vh; box-sizing: border-box; padding-block: 14px; gap: 12px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto auto minmax(0, 1fr); overflow: hidden; }
+  body.pg-projekt .pp-head { grid-column: 1 / -1; grid-row: 1; }
+  body.pg-projekt #pordner { grid-column: 1; grid-row: 2; }
+  body.pg-projekt .pp-tasks { grid-column: 1; grid-row: 3; }
+  body.pg-projekt #ppSide { grid-column: 2; grid-row: 2 / 4; }
+  body.pg-projekt .pp-box { max-height: none; }
+  body.pg-projekt .grid > .empty { grid-column: 1; grid-row: 2; }
+}
+@media (max-width: 1100px) {
+  body.pg-projekt .wrap { padding-block: 14px 40px; gap: 12px; }
+  body.pg-projekt .pp-head { order: 1; } body.pg-projekt #pordner { order: 2; } body.pg-projekt .pp-tasks { order: 3; } body.pg-projekt #ppSide { order: 4; }
+  body.pg-projekt .pp-list { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) { .pp-tw { transition: none; } }
 body.pg-projekt #projekte .filters { display: none; }
 body.pg-projekt .grid { grid-template-columns: minmax(0, 1fr); max-width: 1000px; }
 body.pg-projekt .grid .card .code { font-size: 34px; }
@@ -1151,13 +1234,19 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       <p class="cal-nodate" id="calNoDate"></p>
     </div>
   </section>
-  <section id="pverk" hidden aria-labelledby="pverkH">
-    <h3 id="pverkH"><span class="tt">Verknüpfte Dateien</span></h3>
-    <div class="flist" id="pverkList"></div>
-  </section>
+  <aside id="ppSide" aria-label="Termine und Dateien">
+    <section class="pp-box" id="ppTermine" aria-labelledby="ppTermH">
+      <div class="pp-bh"><h3 id="ppTermH">Termine</h3><button type="button" class="link" id="ppTermNeu">+ Termin</button></div>
+      <div class="pp-in" id="ppTermList"></div>
+    </section>
+    <section id="pverk" hidden aria-labelledby="pverkH">
+      <h3 id="pverkH"><span class="tt">Verknüpfte Dateien</span></h3>
+      <div class="flist" id="pverkList"></div>
+    </section>
+  </aside>
   <section id="pordner" hidden aria-labelledby="pordnerT">
     <div class="stabs" id="srvTabs" role="tablist" aria-label="Server-Tabs" hidden></div>
-    <h3><span class="tt" id="pordnerT">Projektordner</span><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
+    <h3><button type="button" class="pp-tw open" id="pordnerTw" aria-expanded="true" aria-label="Projektordner einklappen">▶</button><span class="tt" id="pordnerT">Projektordner</span><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
     <div class="flist" id="pordnerList"></div>
     <p class="fmsg" id="pordnerMsg" aria-live="polite"></p>
     <div class="ctx" id="ctxMenu" role="menu" hidden></div>
@@ -1259,7 +1348,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       <button type="button" class="btn" id="pSave">Sichern</button>
     </div>
     <div class="field"><label for="fCode">Kürzel</label><input id="fCode" maxlength="12" placeholder="z. B. HOL"></div>
-    <div class="field"><label for="fTitel">Projektname</label><input id="fTitel" placeholder="z. B. Umbau Wohnhaus Holderweg"></div>
+    <div class="field"><label for="fTitel">Projektadresse</label><input id="fTitel" placeholder="z. B. Holderweg 12, Zürich"></div>
     <div class="field"><label for="fPhase">SIA-Phase</label>
       <select id="fPhase">
         <option value="">– keine –</option>
@@ -1598,6 +1687,55 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   const eigen = (x) => !IST || (x.von ? x.von === IST.id : IST.rolle === 'admin');
   const showDone = new Set(), addArt = {};
 
+  // Eingabe «Neue Aufgabe / Neuer Termin» (Karte und Projektseite)
+  const addBlock = (p, tl) => {
+    if (canWrite) {
+      const isTm = addArt[p.id] === 'termin';
+      const seg = el('div', 'add-art'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Art');
+      [['aufgabe', 'Aufgabe'], ['termin', 'Termin']].forEach(([v, label]) => {
+        const sb = el('button', '', label); sb.type = 'button'; sb.setAttribute('aria-pressed', String((addArt[p.id] || 'aufgabe') === v));
+        sb.addEventListener('click', () => { addArt[p.id] = v; render(); requestAnimationFrame(() => { const n = $('add-' + p.id); if (n) n.focus(); }); });
+        seg.append(sb);
+      });
+      tl.append(seg);
+      const add = el('div', 'add' + (isTm ? ' is-tm' : ''));
+      const inp = el('input'); inp.placeholder = isTm ? 'Neuer Termin …' : 'Neue Aufgabe …'; inp.setAttribute('aria-label', 'Neue Aufgabe für ' + (p.name || p.id)); inp.id = 'add-' + p.id;
+      const due = el('input'); due.type = 'date'; due.min = '2000-01-01'; due.max = '2099-12-31'; due.setAttribute('aria-label', 'Fällig am'); due.id = 'due-' + p.id;
+      const dueBtn = el('span', 'duebtn');
+      const dueLbl = el('span', 'duelbl');
+      dueLbl.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+      const dueTxt = el('span', 'duetxt');
+      dueLbl.append(dueTxt);
+      const showDue = () => { dueTxt.textContent = due.value && due.validity.valid ? shortDate(due.value) : ''; dueBtn.classList.toggle('set', !!dueTxt.textContent); };
+      due.addEventListener('change', showDue);
+      due.addEventListener('input', showDue);
+      dueBtn.append(dueLbl, due);
+      const zeit = el('input'); zeit.type = 'time'; zeit.setAttribute('aria-label', 'Von (freiwillig)'); zeit.title = 'Von'; zeit.id = 'zeit-' + p.id;
+      const bis = el('input'); bis.type = 'time'; bis.setAttribute('aria-label', 'Bis'); bis.title = 'Bis'; bis.id = 'bis-' + p.id;
+      zeit.addEventListener('change', () => { if (zeit.value && (!bis.value || bis.value <= zeit.value)) bis.value = fromMin(toMin(zeit.value) + 60); });
+      const b = el('button', 'btn primary', '+'); b.type = 'button'; b.setAttribute('aria-label', isTm ? 'Termin hinzufügen' : 'Aufgabe hinzufügen');
+      const go = async () => {
+        const text = inp.value.trim();
+        if (!text || !db) return;
+        if (isTm && !(due.value && due.validity.valid)) { dueBtn.classList.add('need'); dueBtn.title = 'Für einen Termin zuerst das Datum wählen'; return; }
+        b.disabled = true;
+        // clear first: the snapshot of the new entry re-renders the card and would keep these as drafts
+        const datum = due.validity.valid ? due.value : '', um = zeit.value, bisV = um && bis.value > um ? bis.value : '';
+        inp.value = ''; due.value = ''; zeit.value = ''; bis.value = ''; showDue();
+        try {
+          if (isTm) await db.collection('termine').add({ projekt: p.id, text, datum, zeit: um, bis: bisV, erstellt: new Date().toISOString() });
+          else await db.collection('aufgaben').add({ projekt: p.id, text, erledigt: false, faellig: datum, erstellt: new Date().toISOString() });
+          requestAnimationFrame(() => { const n = $('add-' + p.id); if (n) n.focus(); });
+        } catch (e) { const n = $('add-' + p.id) || inp; n.value = text; n.placeholder = 'Speichern fehlgeschlagen, nochmals versuchen'; }
+        b.disabled = false;
+      };
+      b.addEventListener('click', go);
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+      if (isTm) add.append(inp, dueBtn, zeit, bis, b); else add.append(inp, dueBtn, b);
+      tl.append(add);
+    }
+  };
+
   const card = (p) => {
     const c = el('article', 'card');
     c.id = 'p-' + p.id;
@@ -1607,7 +1745,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     head.append(el('div', 'code', p.name || p.id));
     const st = el('span', 'status st-' + (p.status || 'leer'), STATUS_NAME[p.status] || 'Status offen');
     head.append(st);
-    head.append(el('div', 'titel', p.titel || 'Projektname noch nicht erfasst'));
+    head.append(el('div', 'titel', p.titel || 'Projektadresse noch nicht erfasst'));
     c.append(head);
 
     const ph = el('div', 'phase');
@@ -1658,51 +1796,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       dt.addEventListener('click', () => { showDone.has(p.id) ? showDone.delete(p.id) : showDone.add(p.id); render(); });
       tl.append(dt);
     }
-    if (canWrite) {
-      const isTm = addArt[p.id] === 'termin';
-      const seg = el('div', 'add-art'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Art');
-      [['aufgabe', 'Aufgabe'], ['termin', 'Termin']].forEach(([v, label]) => {
-        const sb = el('button', '', label); sb.type = 'button'; sb.setAttribute('aria-pressed', String((addArt[p.id] || 'aufgabe') === v));
-        sb.addEventListener('click', () => { addArt[p.id] = v; render(); requestAnimationFrame(() => { const n = $('add-' + p.id); if (n) n.focus(); }); });
-        seg.append(sb);
-      });
-      tl.append(seg);
-      const add = el('div', 'add' + (isTm ? ' is-tm' : ''));
-      const inp = el('input'); inp.placeholder = isTm ? 'Neuer Termin …' : 'Neue Aufgabe …'; inp.setAttribute('aria-label', 'Neue Aufgabe für ' + (p.name || p.id)); inp.id = 'add-' + p.id;
-      const due = el('input'); due.type = 'date'; due.min = '2000-01-01'; due.max = '2099-12-31'; due.setAttribute('aria-label', 'Fällig am'); due.id = 'due-' + p.id;
-      const dueBtn = el('span', 'duebtn');
-      const dueLbl = el('span', 'duelbl');
-      dueLbl.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-      const dueTxt = el('span', 'duetxt');
-      dueLbl.append(dueTxt);
-      const showDue = () => { dueTxt.textContent = due.value && due.validity.valid ? shortDate(due.value) : ''; dueBtn.classList.toggle('set', !!dueTxt.textContent); };
-      due.addEventListener('change', showDue);
-      due.addEventListener('input', showDue);
-      dueBtn.append(dueLbl, due);
-      const zeit = el('input'); zeit.type = 'time'; zeit.setAttribute('aria-label', 'Von (freiwillig)'); zeit.title = 'Von'; zeit.id = 'zeit-' + p.id;
-      const bis = el('input'); bis.type = 'time'; bis.setAttribute('aria-label', 'Bis'); bis.title = 'Bis'; bis.id = 'bis-' + p.id;
-      zeit.addEventListener('change', () => { if (zeit.value && (!bis.value || bis.value <= zeit.value)) bis.value = fromMin(toMin(zeit.value) + 60); });
-      const b = el('button', 'btn primary', '+'); b.type = 'button'; b.setAttribute('aria-label', isTm ? 'Termin hinzufügen' : 'Aufgabe hinzufügen');
-      const go = async () => {
-        const text = inp.value.trim();
-        if (!text || !db) return;
-        if (isTm && !(due.value && due.validity.valid)) { dueBtn.classList.add('need'); dueBtn.title = 'Für einen Termin zuerst das Datum wählen'; return; }
-        b.disabled = true;
-        // clear first: the snapshot of the new entry re-renders the card and would keep these as drafts
-        const datum = due.validity.valid ? due.value : '', um = zeit.value, bisV = um && bis.value > um ? bis.value : '';
-        inp.value = ''; due.value = ''; zeit.value = ''; bis.value = ''; showDue();
-        try {
-          if (isTm) await db.collection('termine').add({ projekt: p.id, text, datum, zeit: um, bis: bisV, erstellt: new Date().toISOString() });
-          else await db.collection('aufgaben').add({ projekt: p.id, text, erledigt: false, faellig: datum, erstellt: new Date().toISOString() });
-          requestAnimationFrame(() => { const n = $('add-' + p.id); if (n) n.focus(); });
-        } catch (e) { const n = $('add-' + p.id) || inp; n.value = text; n.placeholder = 'Speichern fehlgeschlagen, nochmals versuchen'; }
-        b.disabled = false;
-      };
-      b.addEventListener('click', go);
-      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
-      if (isTm) add.append(inp, dueBtn, zeit, bis, b); else add.append(inp, dueBtn, b);
-      tl.append(add);
-    }
+    addBlock(p, tl);
     c.append(tl);
 
     if (canWrite) {
@@ -1719,6 +1813,129 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     }
     return c;
   };
+
+
+  /* ---------- Projektseite (2.17): Kopf, Aufgaben mit aufklappbaren Unteraufgaben, Termine ---------- */
+  const PPK = 'cockpit-zg-pp-offen', PPO = 'cockpit-zg-pp-ordner-zu';
+  let ppOpen = new Set(); try { const v = JSON.parse(localStorage.getItem(PPK) || '[]'); if (Array.isArray(v)) ppOpen = new Set(v); } catch (_) {}
+  const ppSave = () => { try { localStorage.setItem(PPK, JSON.stringify([...ppOpen])); } catch (_) {} };
+  const subsList = (t) => (Array.isArray(t.unteraufgaben) ? t.unteraufgaben : []);
+  const ppTw = (t) => {
+    if (!subsList(t).length) return el('span', 'pp-tw0');
+    const on = ppOpen.has(t.id);
+    const b = el('button', 'pp-tw' + (on ? ' open' : ''), '▶'); b.type = 'button';
+    b.setAttribute('aria-expanded', String(on)); b.setAttribute('aria-label', 'Unteraufgaben ' + (on ? 'zuklappen' : 'aufklappen') + ': ' + t.text);
+    b.addEventListener('click', () => { on ? ppOpen.delete(t.id) : ppOpen.add(t.id); ppSave(); render(); });
+    return b;
+  };
+  const ppRow = (t) => {
+    const w = el('div', 'ppt' + (ppOpen.has(t.id) && subsList(t).length ? ' open' : ''));
+    w.append(taskRow(t, true));
+    const subs = subsList(t);
+    if (subs.length && ppOpen.has(t.id)) {
+      const box = el('div', 'pp-subs');
+      subTree(subs).forEach(({ u, depth }) => {
+        const r = el('label', 'pp-sub' + (u.erledigt ? ' done' : '')); r.style.paddingLeft = (8 + depth * 20) + 'px';
+        const cb = el('input'); cb.type = 'checkbox'; cb.checked = !!u.erledigt; cb.disabled = !canWrite;
+        cb.setAttribute('aria-label', 'Unteraufgabe erledigt: ' + u.text);
+        cb.addEventListener('change', () => toggleSub({ t, u }));
+        r.append(cb, el('span', 'n', u.text));
+        box.append(r);
+      });
+      w.append(box);
+    }
+    return w;
+  };
+  const projSeite = (p) => {
+    // Kopf
+    const h = el('header', 'card pp-head');
+    if (farbeOf(p)) { h.classList.add('has-pc'); h.style.setProperty('--pc', farbeOf(p)); }
+    const top = el('div', 'pp-top');
+    const tt = el('div', 'pp-title');
+    tt.append(el('h1', '', p.name || p.id));
+    if (p.titel) tt.append(el('span', 'pp-adr', p.titel));
+    else if (canWrite) { const nb = el('button', 'link', '+ Projektadresse'); nb.type = 'button'; nb.addEventListener('click', () => openPanel(p)); tt.append(nb); }
+    tt.append(el('span', 'status st-' + (p.status || 'leer'), STATUS_NAME[p.status] || 'Status offen'));
+    top.append(tt);
+    if (canWrite) {
+      const acts = el('div', 'pp-acts');
+      const eb = el('button', 'btn', 'Projekt bearbeiten'); eb.type = 'button'; eb.addEventListener('click', () => openPanel(p));
+      acts.append(eb);
+      if (downloads && window.jspdf && tasks.some((t) => t.projekt === p.id)) {
+        const pb = el('button', 'btn', 'Aufgaben als PDF'); pb.type = 'button'; pb.addEventListener('click', () => exportProject(p, pb)); acts.append(pb);
+      }
+      top.append(acts);
+    }
+    h.append(top);
+    const row = el('div', 'pp-row');
+    const ph = el('div', 'pp-phase');
+    const idx = PHASEN.indexOf(String(p.phase || ''));
+    const lbl = el('b', '', idx >= 0 ? 'Phase ' + p.phase : 'SIA-Phase offen');
+    if (idx >= 0) lbl.append(el('span', '', ' ' + PHASE_NAME[p.phase]));
+    const track = el('div', 'track');
+    PHASEN.forEach((code, i) => { const x = el('span', i < idx ? 'past' : i === idx ? 'now' : ''); x.title = code + ' ' + PHASE_NAME[code]; track.append(x); });
+    ph.append(lbl, track, el('span', 'pp-range', '31 → 53'));
+    const vr = el('div', 'pp-resp'); vr.append(document.createTextNode('Verantwortlich: '), el('b', '', p.verantwortlich || 'noch nicht erfasst'));
+    row.append(ph, vr);
+    h.append(row);
+
+    // Aufgaben
+    const mine = tasks.filter((t) => t.projekt === p.id);
+    const open = mine.filter((t) => !t.erledigt).sort(taskOrder);
+    const fresh = mine.filter(recentDone).sort(doneOrder);
+    const done = mine.filter((t) => t.erledigt && !recentDone(t)).sort(doneOrder);
+    const sec = el('section', 'card pp-tasks'); sec.setAttribute('aria-label', 'Aufgaben');
+    const th = el('div', 'pp-th');
+    th.append(el('h2', '', 'Aufgaben'), el('span', 'cnt', open.length + ' offen' + (fresh.length ? ' · ' + fresh.length + ' erledigt' : '')));
+    const list = open.concat(fresh, showDone.has(p.id) ? done : []);
+    const mitSubs = list.filter((t) => subsList(t).length);
+    if (mitSubs.length) {
+      const all = mitSubs.every((t) => ppOpen.has(t.id));
+      const ab = el('button', 'link', all ? 'Alle zuklappen' : 'Alle aufklappen'); ab.type = 'button';
+      ab.addEventListener('click', () => { mitSubs.forEach((t) => (all ? ppOpen.delete(t.id) : ppOpen.add(t.id))); ppSave(); render(); });
+      th.append(ab);
+    }
+    sec.append(th);
+    const lst = el('div', 'pp-list');
+    if (!list.length) lst.append(el('p', 'pp-leer', 'Noch keine Aufgaben. Unten die erste eintragen.'));
+    list.forEach((t) => lst.append(ppRow(t)));
+    if (done.length) {
+      const dt = el('button', 'donetoggle', showDone.has(p.id) ? 'Archiv ausblenden' : 'Archiv anzeigen (' + done.length + ' erledigt)');
+      dt.type = 'button';
+      dt.addEventListener('click', () => { showDone.has(p.id) ? showDone.delete(p.id) : showDone.add(p.id); render(); });
+      lst.append(dt);
+    }
+    sec.append(lst);
+    const foot = el('div', 'pp-add'); addBlock(p, foot); sec.append(foot);
+    return [h, sec];
+  };
+  const renderTermine = () => {
+    const box = $('ppTermList'); if (!box) return;
+    box.replaceChildren();
+    const p = focusP && projects.find((x) => x.id === focusP);
+    if (!p) return;
+    const today = isoDay();
+    const ms = termine.filter((m) => m.projekt === p.id && m.datum >= today).sort((a, b) => (a.datum + (a.zeit || '')).localeCompare(b.datum + (b.zeit || '')));
+    ms.forEach((m) => {
+      const r = el('button', 'trow'); r.type = 'button'; r.setAttribute('aria-label', 'Termin ' + m.text + ', ' + fmtTermin(m));
+      const tx = el('span'); tx.append(el('span', 'tt', m.text || 'Termin'), el('span', 'w', fmtTermin(m)));
+      r.append(tx); r.addEventListener('click', () => openTermin(m)); box.append(r);
+    });
+    if (!ms.length) box.append(el('p', 'pp-leer', 'Keine kommenden Termine.'));
+    $('ppTermNeu').hidden = !canWrite;
+  };
+  $('ppTermNeu').addEventListener('click', () => {
+    if (!focusP) return; addArt[focusP] = 'termin'; render();
+    requestAnimationFrame(() => { const n = $('add-' + focusP); if (n) n.focus(); });
+  });
+  // Projektordner einklappen
+  const ppOrdnerZu = (z, save) => {
+    $('pordner').classList.toggle('pp-zu', z); $('pordnerTw').setAttribute('aria-expanded', String(!z));
+    $('pordnerTw').setAttribute('aria-label', 'Projektordner ' + (z ? 'aufklappen' : 'einklappen'));
+    if (save) { try { localStorage.setItem(PPO, z ? '1' : ''); } catch (_) {} }
+  };
+  try { ppOrdnerZu(localStorage.getItem(PPO) === '1'); } catch (_) { ppOrdnerZu(false); }
+  $('pordnerTw').addEventListener('click', () => ppOrdnerZu(!$('pordner').classList.contains('pp-zu'), true));
 
   let undoTimer = null, lastDeleted = null;
   const hideToast = () => { $('toast').hidden = true; lastDeleted = null; };
@@ -1739,7 +1956,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     if (d && db) { try { await db.doc('aufgaben/' + d.id).set(d.data); if (d.terminId) await db.doc('termine/' + d.terminId).delete(); } catch (e) {} }
   });
 
-  const taskRow = (t) => {
+  const taskRow = (t, pp) => {
     const r = el('div', 'task' + (t.erledigt ? ' done' : '') + (tEditing && tEditing.id === t.id ? ' sel' : '') + (zRow(t) ? ' ' + zRow(t) : ''));
     const cb = el('input'); cb.type = 'checkbox'; cb.checked = !!t.erledigt; cb.id = 'cb-' + t.id; cb.disabled = !canWrite;
     cb.setAttribute('aria-label', 'Erledigt: ' + t.text);
@@ -1772,6 +1989,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     }
     tb.addEventListener('click', () => openTask(t));
     r.append(cb, tb);
+    if (pp) { r.classList.add('pp'); r.prepend(ppTw(t)); }
     if (t.faellig && !t.erledigt) { const n = daysUntil(t.faellig); r.append(el('span', 'due' + (n < 0 ? ' late' : n <= 2 ? ' soon' : ''), (n < 0 ? 'Überfällig · ' : n === 0 ? 'Heute · ' : '') + shortDate(t.faellig))); }
     else r.append(el('span'));
     if (canWrite) {
@@ -1989,7 +2207,9 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     g.querySelectorAll('.add input').forEach((i) => { if (i.value) drafts[i.id] = i.value; });
     g.replaceChildren();
     if (!loaded) { g.append(el('p', 'empty', db === false ? 'Projekte sind hier nicht verfügbar. Öffne das Cockpit angemeldet in claude.ai.' : 'Projekte werden geladen …')); return; }
-    (focusP ? projects.filter((p) => p.id === focusP) : projects).forEach((p) => g.append(card(p)));
+    if (focusP) projects.filter((p) => p.id === focusP).forEach((p) => projSeite(p).forEach((n) => g.append(n)));
+    else projects.forEach((p) => g.append(card(p)));
+    try { renderTermine(); } catch (_) {}
     if (focusP && !projects.some((p) => p.id === focusP)) { setPage('home'); return; }
     if (canWrite && !focusP && window.__rolle !== 'mitarbeiter') {
       const n = el('button', 'newcard', '+ Neues Projekt'); n.type = 'button';
