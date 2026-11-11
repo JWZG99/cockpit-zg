@@ -881,7 +881,7 @@ body.pg-projekt #pordner .flist { overflow: auto; min-height: 0; max-height: cla
 body.pg-projekt #pordner h3 { gap: 4px 6px; }
 body.pg-projekt #pordner h3 .btn { font-size: 13px; padding: 4px 9px; white-space: nowrap; }
 body.pg-projekt #pordner .crumbs { flex: 1 1 110px; min-height: 30px; font-size: 13px; }
-body.pg-projekt #pordner .such { flex: 0 1 110px; font-size: 13px; padding: 4px 8px; }
+body.pg-projekt #pordner .such { flex: 1 1 160px; max-width: 260px; font-size: 13px; padding: 4px 8px; }
 body.pg-projekt #pordner .fit { padding: 6px 12px; font-size: 14px; }
 body.pg-projekt .pp-tasks { min-height: 220px; }
 #pordner.pp-zu .flist, #pordner.pp-zu .fmsg, #pordner.pp-zu .such, #pordner.pp-zu #pordnerUp, #pordner.pp-zu #pordnerNeu { display: none; }
@@ -909,6 +909,27 @@ body.pg-projekt #pordnerTw { display: inline-grid; }
   body.pg-projekt .pp-list { overflow: visible; }
 }
 @media (prefers-reduced-motion: reduce) { .pp-tw { transition: none; } }
+/* 2.18: Shortcuts, Suche, Anheften */
+#pordnerHome { flex: none; border: 0; background: none; border-radius: 9px; font-size: 18px; line-height: 1; padding: 5px 7px; cursor: pointer; }
+#pordnerHome:hover, #pordnerHome:focus-visible { background: var(--fill); }
+#pordnerHome.drop { background: color-mix(in srgb, var(--accent, #0a84ff) 18%, transparent); outline: 2px solid var(--accent, #0a84ff); outline-offset: -2px; }
+#pordner.pp-zu #pordnerHome { display: none; }
+
+#pverk h3 .link { margin-left: auto; }
+#pverk .fit.sc { grid-template-columns: 22px minmax(0, 1fr) auto; }
+#pverk .fit.sc .n b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+#pverk .fit.sc .n small, #pordner .fit .n small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+#pverk .fit.sc.miss { opacity: .6; } #pverk .fit.sc.miss .n small { color: var(--bad-text, #c0392b); }
+#pverk .fit.sc.drop-sc { box-shadow: inset 0 2px 0 var(--accent, #0a84ff); }
+#pverk .fit input { font: inherit; font-size: 14px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--accent, #0a84ff); background: var(--card, #fff); color: inherit; min-width: 0; width: 100%; box-sizing: border-box; }
+#pverk .fit.neu { grid-template-columns: 22px minmax(0, 1fr); }
+.pin { border: 0; background: none; padding: 2px 6px; border-radius: 7px; font-size: 14px; line-height: 1.2; opacity: 0; cursor: pointer; color: inherit; }
+.fit:hover .pin, .pin:focus-visible { opacity: 1; } .pin:hover { background: var(--fill); }
+@media (hover: none) { .pin { opacity: .6; } }
+#pordner .such-st { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 14px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line, rgba(0,0,0,.08)); }
+#pordner .such-st .lk { font: inherit; font-weight: 600; color: var(--accent, #0a84ff); background: none; border: 0; cursor: pointer; padding: 0 4px; }
+#pordner mark { background: color-mix(in srgb, var(--warn, #ff9f0a) 35%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+#pordner .fit .nm { display: block; overflow: hidden; text-overflow: ellipsis; }
 body.pg-projekt #projekte .filters { display: none; }
 body.pg-projekt .grid { grid-template-columns: minmax(0, 1fr); max-width: 1000px; }
 body.pg-projekt .grid .card .code { font-size: 34px; }
@@ -1246,14 +1267,15 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       <div class="pp-in" id="ppTermList"></div>
     </section>
     <section id="pverk" hidden aria-labelledby="pverkH">
-      <h3 id="pverkH"><span class="tt">Verknüpfte Dateien</span></h3>
+      <h3 id="pverkH"><span class="tt">Shortcuts</span><button type="button" class="link" id="scNeu">+ Pfad</button></h3>
       <div class="flist" id="pverkList"></div>
+      <p class="fmsg" id="scMsg" aria-live="polite"></p>
     </section>
   </aside>
   <section id="pordnerLeer" hidden aria-label="Projektordner"><b>Projektordner</b><span>Noch kein Ordner verknüpft.</span><button type="button" class="link" id="pordnerWahl">Ordner wählen …</button></section>
   <section id="pordner" hidden aria-labelledby="pordnerT">
     <div class="stabs" id="srvTabs" role="tablist" aria-label="Server-Tabs" hidden></div>
-    <h3><button type="button" class="pp-tw open" id="pordnerTw" aria-expanded="true" aria-label="Projektordner einklappen">▶</button><span class="tt" id="pordnerT">Projektordner</span><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
+    <h3><button type="button" class="pp-tw open" id="pordnerTw" aria-expanded="true" aria-label="Projektordner einklappen">▶</button><span class="tt" id="pordnerT">Projektordner</span><button type="button" class="pp-home" id="pordnerHome" hidden aria-label="Zum Projektordner (Stamm)" title="Zum Projektordner (Stamm)">🏠</button><nav class="crumbs" id="pordnerCrumbs" aria-label="Pfad" title="Klick auf einen Ordner im Pfad springt dorthin. Klick auf die freie Fläche: Pfad eintippen."></nav><input class="pfad" id="pordnerPfad" aria-label="Pfad" spellcheck="false" hidden><input class="such" id="pordnerSuch" type="search" placeholder="Filtern …" aria-label="Im Ordner filtern"><button type="button" class="btn ghost" id="pordnerUp" hidden>↑ Zurück</button><button type="button" class="btn ghost" id="pordnerNeu" hidden>+ Neuer Ordner</button><button type="button" class="btn ghost" id="pordnerOpen">Im Explorer öffnen</button></h3>
     <div class="flist" id="pordnerList"></div>
     <p class="fmsg" id="pordnerMsg" aria-live="polite"></p>
     <div class="ctx" id="ctxMenu" role="menu" hidden></div>
@@ -4428,10 +4450,14 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     rest.split(/[\\/]/).filter(Boolean).forEach((seg) => { acc = acc ? acc + '\\' + seg : seg; out.push({ name: seg, pfad: acc }); });
     return out;
   };
+  let odRoot = null;
   const drawCrumbs = (root) => {
+    odRoot = root || null;
     const nav = $('pordnerCrumbs'); nav.replaceChildren();
+    const home = $('pordnerHome'); home.hidden = !root;
+    if (root) home.title = 'Zum Projektordner (Stamm): ' + baseName(root);
     let teile = pfadTeile(odPfad);
-    if (root) { const n = pfadTeile(root).length; teile = teile.slice(Math.max(0, n - 1)); }
+    if (root) { const n = pfadTeile(root).length; teile = teile.slice(n); } // der Stamm ist das Häuschen, im Pfad steht nur, was darunter liegt
     teile.forEach((t, i) => {
       if (i) nav.append(el('span', 'sep', '›'));
       const b = el('button', '', t.name); b.type = 'button'; b.title = t.pfad;
@@ -4489,7 +4515,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   const kopieren = async (t) => { try { await navigator.clipboard.writeText(t); fMsg('Pfad kopiert.'); } catch (_) { fMsg('Kopieren ging nicht.'); } };
   const loeschen = async (f) => {
     const r = await window.native.deletePath(f.path);
-    if (r.ok) { fMsg('«' + f.name + '» gelöscht.'); showOrdner(odPfad); }
+    if (r.ok) { fMsg('«' + f.name + '» gelöscht.'); if (suchAktiv) suchStart($('pordnerSuch').value.trim(), true); else showOrdner(odPfad); }
     else if (!r.abgebrochen) fMsg(r.error || 'Löschen ging nicht.');
   };
   const itemMenu = (e, f, row) => {
@@ -4504,9 +4530,12 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       it.push({ t: 'Öffnen', f: () => openFile(f.path) });
       it.push({ t: 'Im Explorer zeigen', f: () => window.native.showInFolder(f.path) });
     }
-    if (canWrite) it.push({ t: 'Verknüpfen …', f: () => openLink(f.path) });
+    if (canWrite) {
+      if (focusP && !server) it.push({ t: 'Als Shortcut anheften', f: () => anheften(f) });
+      it.push({ t: focusP && !server ? 'Mit Aufgabe verknüpfen …' : 'Verknüpfen …', f: () => openLink(f.path) });
+    }
     it.push({ t: 'Pfad kopieren', f: () => kopieren(f.path) });
-    it.push('-', { t: 'Neuer Ordner', f: neuerOrdner });
+    if (!suchAktiv) it.push('-', { t: 'Neuer Ordner', f: neuerOrdner });
     if (window.native.deletePath) it.push('-', { t: f.ordner ? 'Ordner löschen …' : 'Datei löschen …', bad: true, f: () => loeschen(f) });
     openCtx(e, it);
   };
@@ -4578,16 +4607,83 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     });
   };
   document.addEventListener('dragend', () => { dragItem = null; document.querySelectorAll('.drop').forEach((x) => x.classList.remove('drop')); });
+  $('pordnerHome').addEventListener('click', () => { if (odRoot) showOrdner(odRoot); });
+  dropZiel($('pordnerHome'), () => odRoot, null);
 
-  const drawOrdner = () => {
+  // Suche im Projektordner (2.18): rekursiv ab dem Projektordner-Stamm, im Hauptprozess (asynchron, abbrechbar)
+  let suchAktiv = false, suchErg = null, suchStatus = null, suchTok = '', suchZaehler = 0, suchTimer = null, suchFuer = '';
+  const suchReset = () => { clearTimeout(suchTimer); if (suchAktiv && window.native.searchCancel) window.native.searchCancel(); suchAktiv = false; suchErg = null; suchStatus = null; suchTok = ''; };
+  const suchEnde = () => { if (suchAktiv) { suchReset(); drawOrdner(); } else clearTimeout(suchTimer); };
+  async function suchStart(q, neu) {
+    const p = focusP && projects.find((x) => x.id === focusP);
+    if (!p || !p.ordner || !window.native.searchDir) return;
+    suchAktiv = true; suchFuer = p.id; suchErg = null; suchStatus = { ordner: 0 };
+    const tok = 's' + (++suchZaehler); suchTok = tok;
+    closeCtx(); $('pordnerNeu').hidden = true;
+    drawOrdner();
+    let r; try { r = await window.native.searchDir({ root: p.ordner, q, token: tok, neu: !!neu }); } catch (_) { r = { ok: false, error: 'Suche ging nicht.' }; }
+    if (tok !== suchTok) return;
+    suchStatus = null;
+    if (!r.ok && r.abgebrochen) return;
+    suchErg = r.ok ? r : { fehler: r.error || 'Suche ging nicht.' };
+    drawOrdner();
+  }
+  if (window.native.onSearchProgress) window.native.onSearchProgress((d) => {
+    if (d.token !== suchTok || !suchStatus) return;
+    suchStatus = { ordner: d.ordner, eintraege: d.eintraege };
+    const t = $('suchTxt'); if (t) t.textContent = 'Suche … ' + d.ordner.toLocaleString('de-CH') + ' Ordner durchsucht';
+  });
+  const hervorheben = (name, q) => {
+    const worte = q.toLowerCase().split(/\s+/).filter(Boolean).sort((a, b) => b.length - a.length).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const out = document.createDocumentFragment();
+    if (!worte.length) { out.append(name); return out; }
+    name.split(new RegExp('(' + worte.join('|') + ')', 'i')).forEach((t, i) => { if (!t) return; if (i % 2) out.append(el('mark', '', t)); else out.append(t); });
+    return out;
+  };
+  const drawSuche = () => {
     const box = $('pordnerList'); box.replaceChildren();
-    const q = $('pordnerSuch').value.trim().toLowerCase();
+    const p = focusP && projects.find((x) => x.id === focusP); if (!p) return;
+    const q = $('pordnerSuch').value.trim();
+    const st = el('div', 'such-st');
+    if (suchStatus) {
+      const t = el('span', '', 'Suche … ' + (suchStatus.ordner || 0).toLocaleString('de-CH') + ' Ordner durchsucht'); t.id = 'suchTxt';
+      const ab = el('button', 'lk', 'Abbrechen'); ab.type = 'button';
+      ab.addEventListener('click', () => { $('pordnerSuch').value = ''; suchReset(); drawOrdner(); showOrdner(); });
+      st.append(t, ab);
+    } else if (suchErg && suchErg.fehler) st.append(el('span', '', suchErg.fehler));
+    else if (suchErg) {
+      st.append(el('span', '', suchErg.gesamt.toLocaleString('de-CH') + (suchErg.gesamt === 1 ? ' Treffer' : ' Treffer') + (suchErg.mehr ? ' · Mehr als 500 Treffer, genauer suchen.' : '') + (suchErg.voll ? ' · Sehr grosser Ordner, nicht alles durchsucht.' : '') + (suchErg.ausCache ? ' · aus dem Zwischenspeicher' : '')));
+      const nb = el('button', 'lk', 'Neu einlesen'); nb.type = 'button'; nb.title = 'Den Ordner nochmals komplett durchsuchen'; nb.addEventListener('click', () => suchStart(q, true)); st.append(nb);
+    }
+    box.append(st);
+    if (!suchErg || !suchErg.items) return;
+    if (!suchErg.items.length) { box.append(el('div', 'leer', 'Nichts gefunden.')); return; }
+    suchErg.items.forEach((f) => {
+      const row = fileRow(f.ordner ? '📁' : '📄', f.name, [f.ordner ? '' : fmtGr(f.groesse), f.geaendert ? new Date(f.geaendert).toLocaleDateString('de-CH') : ''],
+        () => { if (f.ordner) { $('pordnerSuch').value = ''; showOrdner(f.path); } else openFile(f.path); }, pinKnopf(f));
+      const n = row.querySelector('.n'); n.replaceChildren(el('span', 'nm', ''), el('small', '', relPfad(p, parentOf(f.path))));
+      n.firstChild.append(hervorheben(f.name, q));
+      row.title = f.path;
+      row.addEventListener('contextmenu', (e) => itemMenu(e, f, row));
+      box.append(row);
+    });
+  };
+  const pinKnopf = (f) => {
+    if (!(focusP && page !== 'server' && canWrite && db)) return [];
+    const b = el('button', 'pin', '📌'); b.type = 'button'; b.title = 'Als Shortcut anheften'; b.setAttribute('aria-label', 'Als Shortcut anheften: ' + f.name);
+    b.addEventListener('click', () => anheften(f));
+    return [b];
+  };
+  const drawOrdner = () => {
+    if (suchAktiv && page !== 'server') { drawSuche(); return; }
+    const box = $('pordnerList'); box.replaceChildren();
+    const q = page === 'server' ? $('pordnerSuch').value.trim().toLowerCase() : '';
     const list = q ? odItems.filter((f) => f.name.toLowerCase().includes(q)) : odItems;
     if (!list.length) { box.append(el('div', 'leer', q ? 'Nichts gefunden.' : 'Der Ordner ist leer. Rechtsklick: neuer Ordner.')); return; }
     const server = page === 'server';
     list.slice(0, 500).forEach((f) => {
       const row = fileRow(f.ordner ? '📁' : '📄', f.name, [f.ordner ? '' : fmtGr(f.groesse), f.geaendert ? new Date(f.geaendert).toLocaleDateString('de-CH') : ''],
-        () => (f.ordner ? showOrdner(f.path) : openFile(f.path)), []);
+        () => (f.ordner ? showOrdner(f.path) : openFile(f.path)), pinKnopf(f));
       row.addEventListener('contextmenu', (e) => itemMenu(e, f, row));
       if (window.native.movePath) {
         row.draggable = true;
@@ -4597,13 +4693,16 @@ body.r-mitarbeiter #pDelete { display: none !important; }
       if (f.ordner && server) row.addEventListener('auxclick', (e) => { if (e.button === 1) { e.preventDefault(); newTab(f.path); } });
       box.append(row);
     });
-    if (list.length > 500) box.append(el('div', 'leer', 'Nur die ersten 500 Einträge. Filtern zeigt den Rest.'));
+    if (list.length > 500) box.append(el('div', 'leer', page === 'server' ? 'Nur die ersten 500 Einträge. Filtern zeigt den Rest.' : 'Nur die ersten 500 Einträge. Die Suche findet den Rest.'));
   };
   async function showOrdner(sub) {
     const sec = $('pordner'); const p = focusP && projects.find((x) => x.id === focusP);
     const server = page === 'server';
     $('pordnerLeer').hidden = !(NATIVE_FS && p && !p.ordner && canWrite);
-    if (!NATIVE_FS || !(server || (p && p.ordner))) { sec.hidden = true; odPfad = null; $('srvTabs').hidden = true; closeCtx(); return; }
+    if (!NATIVE_FS || !(server || (p && p.ordner))) { suchReset(); sec.hidden = true; odPfad = null; $('srvTabs').hidden = true; closeCtx(); return; }
+    if (suchAktiv && (server || sub !== undefined || (p && suchFuer !== p.id))) { suchReset(); $('pordnerSuch').value = ''; }
+    if (!server && p && p.ordner && window.native.searchWarm) window.native.searchWarm(p.ordner); // Suchindex im Hintergrund vorladen
+    $('pordnerSuch').placeholder = server ? 'Filtern …' : 'Im Projektordner suchen …'; $('pordnerSuch').setAttribute('aria-label', server ? 'Im Ordner filtern' : 'Im Projektordner suchen');
     sec.hidden = false;
     let root = null;
     if (server) {
@@ -4618,7 +4717,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     renderTabs();
     endEdit(); drawCrumbs(root);
     $('pordnerUp').hidden = server ? !parentOf(odPfad) : odPfad === root;
-    $('pordnerNeu').hidden = !window.native.makeDir;
+    $('pordnerNeu').hidden = !window.native.makeDir || suchAktiv;
     if (sub !== undefined) $('pordnerSuch').value = '';
     const box = $('pordnerList');
     const want = odPfad;
@@ -4628,7 +4727,14 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     odItems = r.items; drawOrdner();
   }
   $('pordnerWahl').addEventListener('click', () => { const p = focusP && projects.find((x) => x.id === focusP); if (p) openPanel(p); });
-  $('pordnerSuch').addEventListener('input', drawOrdner);
+  $('pordnerSuch').addEventListener('input', () => {
+    if (page === 'server') { drawOrdner(); return; }
+    clearTimeout(suchTimer);
+    const q = $('pordnerSuch').value.trim();
+    if (q.length < 2) { suchEnde(); return; }
+    suchTimer = setTimeout(() => suchStart(q), 300);
+  });
+  $('pordnerSuch').addEventListener('keydown', (e) => { if (e.key === 'Escape' && page !== 'server' && $('pordnerSuch').value) { e.preventDefault(); e.stopPropagation(); $('pordnerSuch').value = ''; suchEnde(); } });
   $('pordnerPfad').addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { e.preventDefault(); endEdit(); return; }
     if (e.key === 'Enter') { e.preventDefault(); const v = $('pordnerPfad').value.trim().replace(/^"(.*)"$/, '$1'); endEdit(); if (v) showOrdner(/^[A-Za-z]:$/.test(v) ? v + '\\' : v); }
@@ -4649,9 +4755,8 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     const neu = pfade.map((z) => (typeof z === 'object' ? { id: uid(), art: 'link', name: z.name, ziel: z.ziel } : { id: uid(), art: 'link', name: baseName(z), ziel: z }));
     if (target.startsWith('p:')) {
       const p = projects.find((x) => x.id === target.slice(2)); if (!p) return;
-      const alt = Array.isArray(p.dateien) ? p.dateien : [];
-      await db.doc('projekte/' + p.id).update({ dateien: alt.concat(neu.filter((n) => !alt.some((a) => a.ziel === n.ziel))) });
-      return 'Projekt ' + (p.name || p.id);
+      await scFuegeEin(p, neu.map((n) => ({ ziel: n.ziel, name: n.name, ordner: /^(https?|outlook):/i.test(n.ziel) ? false : undefined })));
+      return 'Projekt ' + (p.name || p.id) + ' (Shortcuts)';
     }
     const t = tasks.find((x) => x.id === target.slice(2)); if (!t) return;
     const alt = Array.isArray(t.anhaenge) ? t.anhaenge : [];
@@ -4697,38 +4802,150 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     try { const w = await linkTo(v, [titel ? { ziel: p, name: '✉ ' + titel } : p]); if (w) { fMsg((titel || baseName(p)) + ' ist mit ' + w + ' verknüpft.'); if (titel) mailMsg('Verknüpft mit ' + w + '.'); } } catch (_) { fMsg('Verknüpfen ging nicht.'); }
   });
 
-  // Projektseite: alle verknüpften Dateien des Projekts (am Projekt und an seinen Aufgaben); Dateien aus dem Explorer hierher ziehen
+  /* ---------- Shortcuts (2.18): angeheftete Pfade pro Projekt, für alle gleich (projekte/<ID>.shortcuts) ---------- */
+  const scListe = (p) => (Array.isArray(p.shortcuts) ? p.shortcuts : []);
+  const scMig = new Set();
+  let scInfo = {}, scSig = '', scZeit = 0, scDragId = null;
+  const nPfad = (x) => String(x || '').replace(/[\\/]+$/, '').replace(/\//g, '\\').toLowerCase();
+  const unterOrdner = (root, z) => { const r = nPfad(root), n = nPfad(z); return !!r && (n === r || n.startsWith(r + '\\')); };
+  const relPfad = (p, z) => { if (!p.ordner || !unterOrdner(p.ordner, z)) return String(z); const r = String(z).replace(/\//g, '\\').slice(String(p.ordner).replace(/[\\/]+$/, '').length).replace(/^\\+/, ''); return r ? '…\\' + r : '(Projektordner)'; };
+  const scMsg = (t) => { const m = $('scMsg'); m.textContent = t || ''; clearTimeout(scMsg.t); if (t) scMsg.t = setTimeout(() => { m.textContent = ''; }, 6000); };
+  const scAktuell = (p) => projects.find((x) => x.id === p.id) || p;
+  // eintraege: [{ ziel, name?, ordner? }]; doppelte Pfade werden nicht zweimal angeheftet
+  const scFuegeEin = async (p, eintraege) => {
+    const cur = scListe(scAktuell(p));
+    const info = await window.native.pfadInfo(eintraege.map((e) => e.ziel));
+    const neu = [];
+    eintraege.forEach((e) => {
+      if (!e.ziel || cur.some((a) => nPfad(a.ziel) === nPfad(e.ziel)) || neu.some((a) => nPfad(a.ziel) === nPfad(e.ziel))) return;
+      neu.push({ id: uid(), name: e.name || baseName(e.ziel), ziel: e.ziel, ordner: e.ordner != null ? !!e.ordner : info[e.ziel] === 'ordner' });
+    });
+    if (neu.length) await db.doc('projekte/' + p.id).update({ shortcuts: cur.concat(neu) });
+    return neu.length;
+  };
+  const anheften = async (f) => {
+    const p = focusP && projects.find((x) => x.id === focusP); if (!p || !canWrite || !db) return;
+    try { const n = await scFuegeEin(p, [{ ziel: f.path, name: f.name, ordner: f.ordner }]); const t = n ? '«' + f.name + '» als Shortcut angeheftet.' : '«' + f.name + '» ist schon ein Shortcut.'; scMsg(t); fMsg(t); }
+    catch (_) { fMsg('Anheften ging nicht.'); }
+  };
+  const scOeffnen = (p, s) => {
+    if (scInfo[s.ziel] === null) { scMsg('Pfad nicht gefunden. Ist der Server verbunden?'); return; }
+    if (s.ordner) {
+      if (p.ordner && unterOrdner(p.ordner, s.ziel) && !$('pordner').hidden) { ppOrdnerZu(false, true); showOrdner(s.ziel); }
+      else window.native.openPath(s.ziel).then((r) => { if (r && !r.ok) scMsg(r.error || 'Öffnen ging nicht.'); });
+    } else window.native.openPath(s.ziel).then((r) => { if (r && !r.ok) scMsg(r.error || 'Öffnen ging nicht.'); });
+  };
+  const scUmbenennen = (p, s, row) => {
+    const n = row.querySelector('.n b'); if (!n) return;
+    const inp = el('input'); inp.value = s.name; inp.setAttribute('aria-label', 'Anzeigename');
+    n.replaceWith(inp); inp.focus(); inp.select();
+    let fertig = false;
+    const go = (ok) => {
+      if (fertig) return; fertig = true;
+      const v = inp.value.trim();
+      inp.replaceWith(el('b', '', ok && v ? v : s.name));
+      if (ok && v && v !== s.name) db.doc('projekte/' + p.id).update({ shortcuts: scListe(scAktuell(p)).map((x) => (x.id === s.id ? { ...x, name: v } : x)) }).catch(() => scMsg('Umbenennen ging nicht.'));
+      else renderVerk();
+    };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); go(false); } });
+    inp.addEventListener('blur', () => go(true));
+    inp.addEventListener('click', (e) => e.stopPropagation());
+  };
+  const scMenu = (e, p, s, row) => {
+    const items = [{ t: 'Öffnen', f: () => scOeffnen(p, s) }];
+    if (canWrite) items.push({ t: 'Umbenennen', f: () => scUmbenennen(p, s, row) });
+    if (!/^(https?|outlook):/i.test(s.ziel)) items.push({ t: s.ordner ? 'Im Explorer öffnen' : 'Im Explorer zeigen', f: () => (s.ordner ? window.native.openPath(s.ziel) : window.native.showInFolder(s.ziel)) });
+    items.push({ t: 'Pfad kopieren', f: async () => { try { await navigator.clipboard.writeText(s.ziel); scMsg('Pfad kopiert.'); } catch (_) { scMsg('Kopieren ging nicht.'); } } });
+    if (canWrite) items.push('-', { t: 'Shortcut entfernen', bad: true, f: () => db.doc('projekte/' + p.id).update({ shortcuts: scListe(scAktuell(p)).filter((x) => x.id !== s.id) }).catch(() => scMsg('Entfernen ging nicht.')) });
+    openCtx(e, items);
+  };
+  const scZeilen = (p) => {
+    const box = $('pverkList'); box.replaceChildren();
+    const liste = scListe(p);
+    if (!liste.length) { box.append(el('div', 'leer', 'Noch keine Shortcuts. Rechtsklick im Projektordner: «Als Shortcut anheften», oder eine Zeile hierher ziehen.')); return; }
+    liste.forEach((s) => {
+      const miss = scInfo[s.ziel] === null;
+      const web = /^https?:/i.test(s.ziel), mail = /^outlook:/i.test(s.ziel);
+      const row = el('div', 'fit sc' + (miss ? ' miss' : '')); row.tabIndex = 0; row.setAttribute('role', 'button'); row.dataset.id = s.id;
+      const n = el('span', 'n'); n.append(el('b', '', s.name || baseName(s.ziel)), el('small', '', miss ? 'nicht gefunden' : mail ? 'Mail in Outlook' : relPfad(p, s.ziel)));
+      row.title = s.ziel;
+      row.append(el('span', '', mail ? '✉️' : web ? '🔗' : s.ordner ? '📁' : '📄'), n);
+      const mb = el('button', 'pin more', '⋯'); mb.type = 'button'; mb.setAttribute('aria-label', 'Menü: ' + (s.name || s.ziel));
+      mb.addEventListener('click', (e) => { e.stopPropagation(); scMenu(e, p, s, row); });
+      row.append(mb);
+      row.addEventListener('click', () => scOeffnen(p, s));
+      row.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target === row) scOeffnen(p, s); });
+      row.addEventListener('contextmenu', (e) => scMenu(e, p, s, row));
+      if (canWrite) {
+        row.draggable = true;
+        row.addEventListener('dragstart', (e) => { scDragId = s.id; closeCtx(); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', s.ziel); } catch (_) {} });
+        row.addEventListener('dragend', () => { scDragId = null; box.querySelectorAll('.drop-sc').forEach((x) => x.classList.remove('drop-sc')); });
+        row.addEventListener('dragover', (e) => { if (scDragId && scDragId !== s.id) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; row.classList.add('drop-sc'); } });
+        row.addEventListener('dragleave', () => row.classList.remove('drop-sc'));
+        row.addEventListener('drop', (e) => {
+          if (!scDragId) return; e.preventDefault(); e.stopPropagation(); row.classList.remove('drop-sc');
+          const von = scDragId; scDragId = null;
+          const cur = scListe(scAktuell(p)); const m = cur.find((x) => x.id === von); if (!m || von === s.id) return;
+          const ohne = cur.filter((x) => x.id !== von); ohne.splice(ohne.findIndex((x) => x.id === s.id), 0, m);
+          db.doc('projekte/' + p.id).update({ shortcuts: ohne }).catch(() => scMsg('Verschieben ging nicht.'));
+        });
+      }
+      box.append(row);
+    });
+  };
+  // zeigt an, ob ein angehefteter Pfad noch da ist (alle 30 s oder wenn sich die Liste ändert)
+  const scPruefen = (p) => {
+    const ziele = scListe(p).map((x) => x.ziel), sig = p.id + '|' + ziele.join('|');
+    if (!ziele.length || (sig === scSig && Date.now() - scZeit < 30000)) return;
+    scSig = sig; scZeit = Date.now();
+    window.native.pfadInfo(ziele).then((info) => {
+      const alt = JSON.stringify(scInfo); scInfo = info || {};
+      if (JSON.stringify(scInfo) !== alt && focusP === p.id && !$('pverkList').querySelector('input')) scZeilen(scAktuell(p));
+    }).catch(() => {});
+  };
   function renderVerk() {
     const sec = $('pverk'); const p = focusP && projects.find((x) => x.id === focusP);
     if (!p || !window.native || !window.native.listDir) { sec.hidden = true; return; }
-    sec.hidden = false;
-    const box = $('pverkList'); box.replaceChildren();
-    const rows = [];
-    (Array.isArray(p.dateien) ? p.dateien : []).forEach((a) => rows.push({ a, wo: 'Projekt' }));
-    tasks.filter((t) => t.projekt === p.id).forEach((t) => (Array.isArray(t.anhaenge) ? t.anhaenge : []).filter((a) => a.art === 'link').forEach((a) => rows.push({ a, t })));
-    if (!rows.length) { box.append(el('div', 'leer', 'Noch nichts verknüpft. Zieh Dateien aus dem Explorer hierher, oder mach im Projektordner oder auf der Seite «Server» einen Rechtsklick auf eine Datei: «Verknüpfen …».')); return; }
-    rows.forEach(({ a, t }) => {
-      const extra = [];
-      if (!t && canWrite) {
-        const x = el('button', 'lk', 'Entfernen'); x.type = 'button';
-        x.addEventListener('click', () => db.doc('projekte/' + p.id).update({ dateien: p.dateien.filter((d) => d.id !== a.id) }).catch(() => {}));
-        extra.push(x);
-      }
-      const web = /^https?:/i.test(a.ziel);
-      box.append(fileRow(/^outlook:/i.test(a.ziel) ? '✉️' : web ? '🔗' : /\.[a-z0-9]{1,5}$/i.test(a.ziel) ? '📄' : '📁', a.name, [t ? 'Aufgabe: ' + t.text : 'Projekt', /^outlook:/i.test(a.ziel) ? 'Mail in Outlook' : a.ziel],
-        () => openFile(a.ziel), extra));
-    });
+    sec.hidden = false; $('scNeu').hidden = !canWrite;
+    // alte «verknüpfte Dateien» (dateien) einmalig als Shortcuts übernehmen; das Feld bleibt stehen
+    const alt = Array.isArray(p.dateien) ? p.dateien : [];
+    if (canWrite && db && alt.length && !p.dateienUebernommen && !scMig.has(p.id)) {
+      scMig.add(p.id);
+      scFuegeEin(p, alt.map((a) => ({ ziel: a.ziel, name: a.name, ordner: /^(https?|outlook):/i.test(a.ziel) ? false : undefined }))).then(() => db.doc('projekte/' + p.id).update({ dateienUebernommen: true })).catch(() => scMig.delete(p.id));
+    }
+    if (!$('pverkList').querySelector('input')) scZeilen(p);
+    scPruefen(p);
   }
-  if (NATIVE_FS && window.native.pathOf) {
-    // ganze Karte «Verknüpfte Dateien» ist Ablagefläche: Dateien aus dem Explorer oder Einträge aus der Projektordner-Liste
+  if (NATIVE_FS) {
+    // ganze Karte ist Ablagefläche: Einträge aus der Projektordner-Liste oder Dateien/Ordner aus dem Explorer
     const vl = $('pverk');
-    const okDrag = (e) => canWrite && focusP && (dragItem || e.dataTransfer?.types?.includes('Files'));
+    const okDrag = (e) => canWrite && focusP && !scDragId && (dragItem || e.dataTransfer?.types?.includes('Files'));
     vl.addEventListener('dragover', (e) => { if (okDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; vl.classList.add('drop'); } });
     vl.addEventListener('dragleave', (e) => { if (!vl.contains(e.relatedTarget)) vl.classList.remove('drop'); });
     vl.addEventListener('drop', async (e) => {
       e.preventDefault(); vl.classList.remove('drop');
-      const pfade = dragItem && dragItem.path ? [dragItem.path] : [...(e.dataTransfer?.files || [])].map((f) => window.native.pathOf(f)).filter(Boolean);
-      if (pfade.length && focusP) { try { const w = await linkTo('p:' + focusP, pfade); if (w) fMsg('«' + baseName(pfade[0]) + '» ist mit ' + w + ' verknüpft.'); } catch (_) {} }
+      const p = focusP && projects.find((x) => x.id === focusP); if (!p || scDragId) return;
+      const eintraege = dragItem && dragItem.path ? [{ ziel: dragItem.path, name: dragItem.name, ordner: dragItem.ordner }] : [...(e.dataTransfer?.files || [])].map((f) => ({ ziel: window.native.pathOf(f) })).filter((x) => x.ziel);
+      if (!eintraege.length) return;
+      try { const n = await scFuegeEin(p, eintraege); scMsg(n ? (n === 1 ? '«' + (eintraege[0].name || baseName(eintraege[0].ziel)) + '»' : n + ' Einträge') + ' angeheftet.' : 'Ist schon ein Shortcut.'); } catch (_) { scMsg('Anheften ging nicht.'); }
+    });
+    // «+ Pfad»: Ordner oder Datei wählen, oder einen Pfad einfügen
+    $('scNeu').addEventListener('click', (e) => {
+      const p = focusP && projects.find((x) => x.id === focusP); if (!p || !canWrite) return;
+      const add = async (pfade) => { if (!pfade || !pfade.length) return; try { const n = await scFuegeEin(p, pfade.map((z) => ({ ziel: z }))); scMsg(n ? n + (n === 1 ? ' Shortcut angeheftet.' : ' Shortcuts angeheftet.') : 'Ist schon ein Shortcut.'); } catch (_) { scMsg('Anheften ging nicht.'); } };
+      openCtx(e, [
+        { t: 'Ordner wählen …', f: async () => add(await window.native.pickPath('ordner')) },
+        { t: 'Datei wählen …', f: async () => add(await window.native.pickPath('datei')) },
+        { t: 'Pfad einfügen …', f: () => {
+          const box = $('pverkList'); const alt = box.querySelector('.fit.neu'); if (alt) { alt.querySelector('input').focus(); return; }
+          const row = el('div', 'fit neu'); const inp = el('input'); inp.placeholder = 'Pfad einfügen, dann Enter'; inp.setAttribute('aria-label', 'Pfad');
+          row.append(el('span', '', '📌'), inp); box.prepend(row); inp.focus();
+          let fertig = false;
+          const go = (ok) => { if (fertig) return; fertig = true; const v = inp.value.trim().replace(/^"(.*)"$/, '$1'); row.remove(); if (ok && v) add([v]); else renderVerk(); };
+          inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); go(true); } else if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); go(false); } });
+          inp.addEventListener('blur', () => setTimeout(() => go(false), 150));
+        } },
+      ]);
     });
   }
   // Seite «Mails»: Outlook-Posteingang dieses PCs (nur lesen; öffnen, antworten und schreiben passiert in Outlook)
@@ -4744,7 +4961,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
   };
   const mailVerk = (id) => {
     const z = 'outlook:' + id, wo = [];
-    allProjects.forEach((p) => { if ((p.dateien || []).some((a) => a.ziel === z)) wo.push(p.name || p.id); });
+    allProjects.forEach((p) => { if ((p.dateien || []).concat(p.shortcuts || []).some((a) => a.ziel === z)) wo.push(p.name || p.id); });
     allTasks.forEach((t) => { if ((t.anhaenge || []).some((a) => a.ziel === z)) wo.push('Aufgabe «' + (t.text || '').slice(0, 40) + '»'); });
     return wo;
   };

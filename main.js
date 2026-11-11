@@ -373,6 +373,114 @@ const listDir = (p) => {
   }
 };
 ipcMain.handle('list-dir', (_e, p) => listDir(p));
+
+// Plan 02 (2.18): rekursive Suche ab dem Projektordner. Nur lesen, asynchron, abbrechbar.
+// Index nur im Speicher (10 Min), nichts wird auf G: geschrieben.
+const SUCH_TTL = 10 * 60 * 1000, SUCH_MAX_TREFFER = 500, SUCH_MAX_INDEX = 400000;
+const suchIndex = new Map(); // wurzel (klein) -> { zeit, liste: [{ name, path, ordner, groesse, geaendert, low }], ordner }
+const suchBauend = new Map(); // wurzel (klein) -> { promise, stand: { ordner, eintraege } } (läuft gerade, z. B. Vorladen beim Öffnen eines Projekts)
+let suchToken = null, suchGen = 0;
+const suchVergessen = () => { suchIndex.clear(); suchGen++; };
+const ueberspringen = (n) => n.startsWith('.') || /^(desktop\.ini|thumbs\.db|~\$.*)$/i.test(n);
+const suchNorm = (t) => String(t || '').toLowerCase().normalize('NFC');
+// aktiv(): false = abbrechen; fortschritt(ordner, eintraege); pause = Millisekunden Pause zwischen den Päckchen (Vorladen im Hintergrund schont das Netzlaufwerk)
+async function indexBauen(wurzel, aktiv, fortschritt, pause) {
+  const liste = []; let ordner = 0, letzte = Date.now(), seit = 0;
+  const stack = [wurzel];
+  while (stack.length) {
+    if (!aktiv()) return null;
+    const dir = stack.pop();
+    let d;
+    try { d = await fs.promises.opendir(dir); } catch (_) { continue; }
+    ordner++;
+    try {
+      for await (const e of d) {
+        if (!aktiv()) { try { await d.close(); } catch (_) {} return null; }
+        if (ueberspringen(e.name) || e.isSymbolicLink()) continue;
+        const full = path.join(dir, e.name);
+        const isDir = e.isDirectory();
+        let st = null; try { st = await fs.promises.stat(full); } catch (_) {}
+        liste.push({ name: e.name, path: full, ordner: isDir, groesse: st && !isDir ? st.size : 0, geaendert: st ? st.mtimeMs : 0, low: suchNorm(e.name) });
+        if (isDir) stack.push(full);
+        if (liste.length >= SUCH_MAX_INDEX) return { liste, ordner, voll: true };
+        if (Date.now() - letzte > 250) { letzte = Date.now(); fortschritt(ordner, liste.length); await new Promise((r) => setTimeout(r, pause || 0)); }
+      }
+    } catch (_) {}
+  }
+  return { liste, ordner };
+}
+const indexGueltig = (key) => { const i = suchIndex.get(key); return i && Date.now() - i.zeit <= SUCH_TTL ? i : null; };
+// Index im Hintergrund aufbauen (nicht durch eine neue Suche abbrechbar); eine laufende Suche wartet darauf, statt nochmals zu lesen
+function indexVorladen(root) {
+  const key = path.resolve(root).toLowerCase();
+  if (indexGueltig(key)) return suchBauend.get(key) || null;
+  if (suchBauend.has(key)) return suchBauend.get(key);
+  const gen = suchGen, stand = { ordner: 0, eintraege: 0 };
+  const eintrag = { stand };
+  eintrag.promise = indexBauen(root, () => true, (o, n) => { stand.ordner = o; stand.eintraege = n; }, 15).then((r) => {
+    if (r && gen === suchGen) suchIndex.set(key, { zeit: Date.now(), liste: r.liste, ordner: r.ordner, voll: !!r.voll });
+    return r;
+  }).catch(() => null).finally(() => { suchBauend.delete(key); });
+  suchBauend.set(key, eintrag);
+  return eintrag;
+}
+ipcMain.handle('search-warm', (_e, root) => {
+  root = cleanP(root);
+  if (!root || !fs.existsSync(root)) return false;
+  indexVorladen(root); return true;
+});
+ipcMain.handle('search-dir', async (e, { root, q, token, neu }) => {
+  root = cleanP(root); token = String(token || Date.now());
+  const worte = suchNorm(q).split(/\s+/).filter(Boolean);
+  if (!root || !worte.length) return { ok: false, error: 'Nichts zu suchen.' };
+  suchToken = token;
+  const key = path.resolve(root).toLowerCase();
+  const sender = e.sender;
+  const senden = (o, n) => { try { if (!sender.isDestroyed()) sender.send('search-progress', { token, ordner: o, eintraege: n }); } catch (_) {} };
+  if (neu) { suchIndex.delete(key); suchGen++; }
+  let idx = indexGueltig(key), aus = !!idx;
+  if (!idx) {
+    if (!fs.existsSync(root)) return { ok: false, error: 'Ordner nicht gefunden. Ist der Server verbunden?' };
+    const laeuft = suchBauend.get(key);
+    if (laeuft) {
+      // Vorladen läuft schon: darauf warten (Fortschritt weitergeben)
+      const iv = setInterval(() => senden(laeuft.stand.ordner, laeuft.stand.eintraege), 300);
+      try { await laeuft.promise; } finally { clearInterval(iv); }
+      if (suchToken !== token) return { ok: false, abgebrochen: true };
+      idx = indexGueltig(key);
+    }
+    if (!idx) {
+      const r = await indexBauen(root, () => suchToken === token, senden, 0);
+      if (!r) return { ok: false, abgebrochen: true };
+      idx = { zeit: Date.now(), liste: r.liste, ordner: r.ordner, voll: !!r.voll };
+      suchIndex.set(key, idx);
+    }
+  }
+  if (suchToken !== token) return { ok: false, abgebrochen: true };
+  const treffer = [];
+  let gesamt = 0;
+  for (const f of idx.liste) {
+    if (worte.every((w) => f.low.includes(w))) {
+      gesamt++;
+      treffer.push(f);
+    }
+  }
+  treffer.sort((a, b) => (b.ordner - a.ordner) || a.name.localeCompare(b.name, 'de'));
+  const items = treffer.slice(0, SUCH_MAX_TREFFER).map(({ low, ...f }) => f);
+  return { ok: true, items, gesamt, mehr: gesamt > SUCH_MAX_TREFFER, ordner: idx.ordner, eintraege: idx.liste.length, voll: !!idx.voll, ausCache: aus };
+});
+ipcMain.handle('search-cancel', () => { suchToken = null; return true; });
+ipcMain.handle('search-forget', () => { suchVergessen(); return true; });
+// Art von Pfaden (für Shortcuts): 'ordner' | 'datei' | 'link' (Web, Outlook) | null (nicht gefunden)
+ipcMain.handle('pfad-info', (_e, liste) => {
+  const out = {};
+  (Array.isArray(liste) ? liste : []).slice(0, 200).forEach((p0) => {
+    const p = cleanP(p0);
+    if (/^(https?|outlook):/i.test(p)) { out[p0] = 'link'; return; }
+    try { out[p0] = fs.statSync(p).isDirectory() ? 'ordner' : 'datei'; } catch (_) { out[p0] = null; }
+  });
+  return out;
+});
 // Seite «Server»: im Explorer zeigen, neuer Ordner, löschen (mit Rückfrage)
 const cleanP = (p) => String(p || '').trim().replace(/^"(.*)"$/, '$1');
 const isRoot = (p) => { const r = path.parse(p).root; return !p || path.resolve(p) === path.resolve(r) || /^\\\\[^\\]+\\[^\\]+\\?$/.test(p); };
@@ -387,7 +495,7 @@ ipcMain.handle('make-dir', (_e, { in: inDir, name }) => {
   if (!name || /[<>:"/\\|?*\x00-\x1f]/.test(name) || /^\.+$/.test(name) || /[. ]$/.test(name)) return { ok: false, error: 'Dieser Name geht nicht (keine Zeichen wie \\ / : * ? " < > |).' };
   const full = path.join(cleanP(inDir), name);
   if (fs.existsSync(full)) return { ok: false, error: 'Diesen Ordner gibt es schon.' };
-  try { fs.mkdirSync(full); return { ok: true, path: full }; } catch (e) { return { ok: false, error: e.code === 'EPERM' || e.code === 'EACCES' ? 'Keine Berechtigung für diesen Ordner.' : 'Ordner anlegen ging nicht.' }; }
+  try { fs.mkdirSync(full); suchVergessen(); return { ok: true, path: full }; } catch (e) { return { ok: false, error: e.code === 'EPERM' || e.code === 'EACCES' ? 'Keine Berechtigung für diesen Ordner.' : 'Ordner anlegen ging nicht.' }; }
 });
 // Verschieben (Standard) oder kopieren (Ctrl) per Ziehen auf der Seite «Server»
 ipcMain.handle('move-path', async (_e, { von, nach, kopie }) => {
@@ -412,6 +520,7 @@ ipcMain.handle('move-path', async (_e, { von, nach, kopie }) => {
       }
     }
   } catch (e) { return { ok: false, error: (kopie ? 'Kopieren' : 'Verschieben') + ' ging nicht: ' + busy(e) }; }
+  suchVergessen();
   return { ok: true, ziel };
 });
 ipcMain.handle('delete-path', async (_e, p) => {
@@ -432,6 +541,7 @@ ipcMain.handle('delete-path', async (_e, p) => {
   catch (_) {
     try { fs.rmSync(p, { recursive: true }); } catch (e) { return { ok: false, error: e.code === 'EPERM' || e.code === 'EACCES' || e.code === 'EBUSY' ? 'Löschen ging nicht: keine Berechtigung, oder eine Datei darin ist noch offen.' : 'Löschen ging nicht.' }; }
   }
+  suchVergessen();
   return { ok: true };
 });
 // Assistent (Claude) im Programm
