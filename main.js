@@ -378,22 +378,24 @@ ipcMain.handle('list-dir', (_e, p) => listDir(p));
 // Index nur im Speicher (10 Min), nichts wird auf G: geschrieben.
 const SUCH_TTL = 10 * 60 * 1000, SUCH_MAX_TREFFER = 500, SUCH_MAX_INDEX = 400000;
 const suchIndex = new Map(); // wurzel (klein) -> { zeit, liste: [{ name, path, ordner, groesse, geaendert, low }], ordner }
-let suchToken = null;
-const suchVergessen = () => suchIndex.clear();
+const suchBauend = new Map(); // wurzel (klein) -> { promise, stand: { ordner, eintraege } } (läuft gerade, z. B. Vorladen beim Öffnen eines Projekts)
+let suchToken = null, suchGen = 0;
+const suchVergessen = () => { suchIndex.clear(); suchGen++; };
 const ueberspringen = (n) => n.startsWith('.') || /^(desktop\.ini|thumbs\.db|~\$.*)$/i.test(n);
 const suchNorm = (t) => String(t || '').toLowerCase().normalize('NFC');
-async function indexBauen(wurzel, token, fortschritt) {
-  const liste = []; let ordner = 0, letzte = Date.now();
+// aktiv(): false = abbrechen; fortschritt(ordner, eintraege); pause = Millisekunden Pause zwischen den Päckchen (Vorladen im Hintergrund schont das Netzlaufwerk)
+async function indexBauen(wurzel, aktiv, fortschritt, pause) {
+  const liste = []; let ordner = 0, letzte = Date.now(), seit = 0;
   const stack = [wurzel];
   while (stack.length) {
-    if (suchToken !== token) return null;
+    if (!aktiv()) return null;
     const dir = stack.pop();
     let d;
     try { d = await fs.promises.opendir(dir); } catch (_) { continue; }
     ordner++;
     try {
       for await (const e of d) {
-        if (suchToken !== token) { try { await d.close(); } catch (_) {} return null; }
+        if (!aktiv()) { try { await d.close(); } catch (_) {} return null; }
         if (ueberspringen(e.name) || e.isSymbolicLink()) continue;
         const full = path.join(dir, e.name);
         const isDir = e.isDirectory();
@@ -401,34 +403,66 @@ async function indexBauen(wurzel, token, fortschritt) {
         liste.push({ name: e.name, path: full, ordner: isDir, groesse: st && !isDir ? st.size : 0, geaendert: st ? st.mtimeMs : 0, low: suchNorm(e.name) });
         if (isDir) stack.push(full);
         if (liste.length >= SUCH_MAX_INDEX) return { liste, ordner, voll: true };
-        if (Date.now() - letzte > 250) { letzte = Date.now(); fortschritt(ordner, liste.length); await new Promise((r) => setImmediate(r)); }
+        if (Date.now() - letzte > 250) { letzte = Date.now(); fortschritt(ordner, liste.length); await new Promise((r) => setTimeout(r, pause || 0)); }
       }
     } catch (_) {}
   }
   return { liste, ordner };
 }
+const indexGueltig = (key) => { const i = suchIndex.get(key); return i && Date.now() - i.zeit <= SUCH_TTL ? i : null; };
+// Index im Hintergrund aufbauen (nicht durch eine neue Suche abbrechbar); eine laufende Suche wartet darauf, statt nochmals zu lesen
+function indexVorladen(root) {
+  const key = path.resolve(root).toLowerCase();
+  if (indexGueltig(key)) return suchBauend.get(key) || null;
+  if (suchBauend.has(key)) return suchBauend.get(key);
+  const gen = suchGen, stand = { ordner: 0, eintraege: 0 };
+  const eintrag = { stand };
+  eintrag.promise = indexBauen(root, () => true, (o, n) => { stand.ordner = o; stand.eintraege = n; }, 15).then((r) => {
+    if (r && gen === suchGen) suchIndex.set(key, { zeit: Date.now(), liste: r.liste, ordner: r.ordner, voll: !!r.voll });
+    return r;
+  }).catch(() => null).finally(() => { suchBauend.delete(key); });
+  suchBauend.set(key, eintrag);
+  return eintrag;
+}
+ipcMain.handle('search-warm', (_e, root) => {
+  root = cleanP(root);
+  if (!root || !fs.existsSync(root)) return false;
+  indexVorladen(root); return true;
+});
 ipcMain.handle('search-dir', async (e, { root, q, token, neu }) => {
   root = cleanP(root); token = String(token || Date.now());
   const worte = suchNorm(q).split(/\s+/).filter(Boolean);
   if (!root || !worte.length) return { ok: false, error: 'Nichts zu suchen.' };
   suchToken = token;
   const key = path.resolve(root).toLowerCase();
-  let idx = suchIndex.get(key), aus = false;
-  if (neu || !idx || Date.now() - idx.zeit > SUCH_TTL) {
+  const sender = e.sender;
+  const senden = (o, n) => { try { if (!sender.isDestroyed()) sender.send('search-progress', { token, ordner: o, eintraege: n }); } catch (_) {} };
+  if (neu) { suchIndex.delete(key); suchGen++; }
+  let idx = indexGueltig(key), aus = !!idx;
+  if (!idx) {
     if (!fs.existsSync(root)) return { ok: false, error: 'Ordner nicht gefunden. Ist der Server verbunden?' };
-    const sender = e.sender;
-    const r = await indexBauen(root, token, (o, n) => { try { if (!sender.isDestroyed()) sender.send('search-progress', { token, ordner: o, eintraege: n }); } catch (_) {} });
-    if (!r) return { ok: false, abgebrochen: true };
-    idx = { zeit: Date.now(), liste: r.liste, ordner: r.ordner, voll: !!r.voll };
-    suchIndex.set(key, idx);
-  } else aus = true;
+    const laeuft = suchBauend.get(key);
+    if (laeuft) {
+      // Vorladen läuft schon: darauf warten (Fortschritt weitergeben)
+      const iv = setInterval(() => senden(laeuft.stand.ordner, laeuft.stand.eintraege), 300);
+      try { await laeuft.promise; } finally { clearInterval(iv); }
+      if (suchToken !== token) return { ok: false, abgebrochen: true };
+      idx = indexGueltig(key);
+    }
+    if (!idx) {
+      const r = await indexBauen(root, () => suchToken === token, senden, 0);
+      if (!r) return { ok: false, abgebrochen: true };
+      idx = { zeit: Date.now(), liste: r.liste, ordner: r.ordner, voll: !!r.voll };
+      suchIndex.set(key, idx);
+    }
+  }
   if (suchToken !== token) return { ok: false, abgebrochen: true };
   const treffer = [];
   let gesamt = 0;
   for (const f of idx.liste) {
     if (worte.every((w) => f.low.includes(w))) {
       gesamt++;
-      if (treffer.length < SUCH_MAX_INDEX) treffer.push(f);
+      treffer.push(f);
     }
   }
   treffer.sort((a, b) => (b.ordner - a.ordner) || a.name.localeCompare(b.name, 'de'));

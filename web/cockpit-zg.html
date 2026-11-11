@@ -4683,6 +4683,7 @@ body.r-mitarbeiter #pDelete { display: none !important; }
     $('pordnerLeer').hidden = !(NATIVE_FS && p && !p.ordner && canWrite);
     if (!NATIVE_FS || !(server || (p && p.ordner))) { suchReset(); sec.hidden = true; odPfad = null; $('srvTabs').hidden = true; closeCtx(); return; }
     if (suchAktiv && (server || sub !== undefined || (p && suchFuer !== p.id))) { suchReset(); $('pordnerSuch').value = ''; }
+    if (!server && p && p.ordner && window.native.searchWarm) window.native.searchWarm(p.ordner); // Suchindex im Hintergrund vorladen
     $('pordnerSuch').placeholder = server ? 'Filtern …' : 'Im Projektordner suchen …'; $('pordnerSuch').setAttribute('aria-label', server ? 'Im Ordner filtern' : 'Im Projektordner suchen');
     sec.hidden = false;
     let root = null;

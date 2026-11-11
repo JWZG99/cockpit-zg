@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('native', {
   pathOf: (file) => { try { return webUtils.getPathForFile(file) || ''; } catch (_) { return ''; } },
   listDir: (p) => ipcRenderer.invoke('list-dir', p),
   searchDir: (o) => ipcRenderer.invoke('search-dir', o),
+  searchWarm: (root) => ipcRenderer.invoke('search-warm', root),
   searchCancel: () => ipcRenderer.invoke('search-cancel'),
   searchForget: () => ipcRenderer.invoke('search-forget'),
   onSearchProgress: (cb) => ipcRenderer.on('search-progress', (_e, d) => cb(d)),
