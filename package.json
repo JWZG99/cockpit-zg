@@ -1,7 +1,7 @@
 {
   "name": "cockpit-zg",
   "productName": "Cockpit ZG",
-  "version": "1.1.0",
+  "version": "2.17.0",
   "description": "Projekte, Aufgaben und Arbeitszeit von ZG als Windows-Programm",
   "main": "main.js",
   "author": "Zottele Gallicchio Architekten",
@@ -11,6 +11,7 @@
     "dist": "electron-builder --win --publish never"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.7.0",
     "electron-updater": "6.8.9"
   },
   "devDependencies": {
@@ -22,6 +23,10 @@
     "productName": "Cockpit ZG",
     "files": [
       "main.js",
+      "ki.js",
+      "buero-update.js",
+      "bauten.js",
+      "mail.js",
       "preload.js",
       "app/**/*",
       "package.json"

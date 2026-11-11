@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>Cockpit ZG · Anmelden</title>
+<style>
+:root { --bg: #f2f2f7; --paper: #fff; --fill: #f2f2f7; --text: #1c1c1e; --muted: #6c6c70; --line: rgba(60,60,67,.18); --accent: #0068da; --bad: #c0392b; }
+@media (prefers-color-scheme: dark) { :root { --bg: #000; --paper: #1c1c1e; --fill: #2c2c2e; --text: #f2f2f7; --muted: #98989f; --line: rgba(84,84,88,.6); --accent: #0a84ff; --bad: #ff6b5e; } }
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--text);
+  font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background-image: radial-gradient(900px 600px at 10% 0%, rgba(0,104,218,.12), transparent 60%), radial-gradient(800px 600px at 100% 100%, rgba(52,199,89,.10), transparent 60%); }
+.box { width: min(420px, 100%); background: var(--paper); border-radius: 22px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.12); }
+h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -.02em; }
+.sub { margin: 0 0 20px; color: var(--muted); }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+input { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--fill); color: inherit; }
+input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.btn { width: 100%; margin-top: 18px; font: inherit; font-size: 16px; font-weight: 600; padding: 12px; border: 0; border-radius: 12px; background: var(--accent); color: #fff; cursor: pointer; }
+.btn:disabled { opacity: .5; cursor: default; }
+.link { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 0; margin-top: 14px; }
+.err { color: var(--bad); min-height: 1.4em; margin-top: 10px; font-size: 14px; }
+.users { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow: auto; }
+.u { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; text-align: left; width: 100%; padding: 8px 10px; border: 0; border-radius: 12px; background: var(--fill); color: inherit; font: inherit; cursor: pointer; }
+.u:hover, .u:focus-visible { outline: 2px solid var(--accent); }
+.av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; }
+.u .n { font-weight: 600; } .u .r { font-size: 13px; color: var(--muted); }
+.who { display: flex; gap: 12px; align-items: center; margin-bottom: 4px; }
+.note { font-size: 13px; color: var(--muted); margin-top: 16px; }
+</style>
+</head>
+<body>
+<main class="box">
+  <h1>Cockpit ZG</h1>
+  <p class="sub" id="sub">Anmelden</p>
+
+  <!-- first start: create the administrator -->
+  <form id="setup" hidden autocomplete="off">
+        <p>Sonst legst du dich jetzt als <b>Administrator</b> an. Danach kannst du im Programm unter «Team» die anderen Mitarbeiter und den Chef erfassen.</p>
+    <label for="sName">Name</label><input id="sName" required placeholder="Vorname Nachname">
+    <label for="sKurz">Kürzel</label><input id="sKurz" maxlength="4" placeholder="z. B. ZG">
+    <label for="sPw">Passwort</label><input id="sPw" type="password" required minlength="4">
+    <label for="sPw2">Passwort wiederholen</label><input id="sPw2" type="password" required minlength="4">
+    <button class="btn" type="submit" id="sGo">Administrator anlegen</button>
+    <div class="err" id="sErr" role="alert"></div>
+  </form>
+
+  <!-- pick a person -->
+  <div id="pick" hidden>
+    <div class="users" id="users" role="list"></div>
+    <button class="link" type="button" id="toReg">Neu im Büro? Hier als Mitarbeiter anmelden</button>
+  </div>
+
+  <!-- new colleague registers themselves (always as Mitarbeiter) -->
+  <form id="reg" hidden autocomplete="off">
+    <p>Du wirst als <b>Mitarbeiter</b> angelegt. Mehr Rechte (Chef) kann der Administrator unter «Team» geben.</p>
+    <label for="rName">Name</label><input id="rName" required placeholder="Vorname Nachname">
+    <label for="rKurz">Kürzel</label><input id="rKurz" maxlength="4" placeholder="z. B. AM">
+    <label for="rPw">Passwort</label><input id="rPw" type="password" required minlength="4">
+    <label for="rPw2">Passwort wiederholen</label><input id="rPw2" type="password" required minlength="4">
+    <button class="btn" type="submit" id="rGo">Anmelden</button>
+    <div class="err" id="rErr" role="alert"></div>
+    <button class="link" type="button" id="rBack">Zurück zur Liste</button>
+  </form>
+
+  <!-- no users and no server: never create an administrator on a single PC -->
+  <div id="noserver" hidden>
+    <p><b>Der Server G: ist nicht erreichbar.</b></p>
+    <p>Das Cockpit braucht den Ordner «G:\03 Dokumente\90 ZG Programm». Bitte G: verbinden und das Cockpit neu starten.</p>
+    <button class="btn" type="button" id="nsRetry">Nochmals versuchen</button>
+  </div>
+
+  <!-- password -->
+  <form id="login" hidden autocomplete="off">
+    <div class="who"><span class="av" id="lAv"></span><b id="lName"></b></div>
+    <label for="lPw">Passwort</label><input id="lPw" type="password" required>
+    <button class="btn" type="submit" id="lGo">Anmelden</button>
+    <div class="err" id="lErr" role="alert"></div>
+    <button class="link" type="button" id="lBack">Andere Person wählen</button>
+    <p class="note">Passwort vergessen? Der Chef oder der Administrator kann es unter «Team» neu setzen.</p>
+  </form>
+
+  <p class="note" id="dirNote">Daten: <span id="dir"></span><br><button class="link" type="button" id="dirBtn">Anderen Datenordner wählen (z. B. auf G:) …</button></p>
+  <p class="note" id="offline" hidden>Der Server ist gerade nicht erreichbar. Angezeigt wird die letzte bekannte Liste.</p>
+</main>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const N = window.native;
+  const ini = (u) => (u.kuerzel || u.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 3)).toUpperCase();
+  const ROLLE = { mitarbeiter: 'Mitarbeiter', chef: 'Chef', admin: 'Administrator' };
+  let chosen = null;
+  const show = (id) => ['setup', 'pick', 'login', 'reg', 'noserver'].forEach((x) => { $(x).hidden = x !== id; });
+
+  const load = async () => {
+    const st = await N.authState();
+    $('offline').hidden = st.online;
+    if (st.einrichten) { $('sub').textContent = 'Einrichten'; show('setup'); $('sName').focus(); return; }
+    if (st.keinServer) { $('sub').textContent = 'Kein Server'; show('noserver'); return; }
+    $('sub').textContent = 'Wer bist du?';
+    const box = $('users'); box.replaceChildren();
+    st.benutzer.forEach((u) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'u'; b.setAttribute('role', 'listitem');
+      const av = document.createElement('span'); av.className = 'av'; av.textContent = ini(u);
+      const tx = document.createElement('span');
+      const n = document.createElement('div'); n.className = 'n'; n.textContent = u.name;
+      const r = document.createElement('div'); r.className = 'r'; r.textContent = ROLLE[u.rolle] || 'Mitarbeiter';
+      tx.append(n, r); b.append(av, tx);
+      b.addEventListener('click', () => pick(u));
+      box.append(b);
+    });
+    let last = null; try { last = localStorage.getItem('cockpit-zg-letzter'); } catch (_) {}
+    const lu = st.benutzer.find((u) => u.id === last);
+    if (lu) pick(lu); else show('pick');
+  };
+  const pick = (u) => {
+    chosen = u; $('lName').textContent = u.name; $('lAv').textContent = ini(u);
+    $('lErr').textContent = ''; $('lPw').value = ''; $('sub').textContent = 'Anmelden';
+    show('login'); $('lPw').focus();
+  };
+  $('lBack').addEventListener('click', () => { $('sub').textContent = 'Wer bist du?'; show('pick'); });
+  $('login').addEventListener('submit', async (e) => {
+    e.preventDefault(); $('lGo').disabled = true;
+    const r = await N.authLogin(chosen.id, $('lPw').value);
+    $('lGo').disabled = false;
+    if (!r.ok) { $('lErr').textContent = r.error; $('lPw').select(); return; }
+    try { localStorage.setItem('cockpit-zg-letzter', chosen.id); } catch (_) {}
+  });
+  $('setup').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if ($('sPw').value !== $('sPw2').value) { $('sErr').textContent = 'Die beiden Passwörter sind nicht gleich.'; return; }
+    $('sGo').disabled = true;
+    const r = await N.authSetup({ name: $('sName').value, kuerzel: $('sKurz').value, pw: $('sPw').value });
+    $('sGo').disabled = false;
+    if (!r.ok) $('sErr').textContent = r.error;
+  });
+  $('toReg').addEventListener('click', () => { $('sub').textContent = 'Neu anmelden'; $('rErr').textContent = ''; show('reg'); $('rName').focus(); });
+  $('rBack').addEventListener('click', () => { $('sub').textContent = 'Wer bist du?'; show('pick'); });
+  $('nsRetry').addEventListener('click', () => load());
+  $('reg').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if ($('rPw').value !== $('rPw2').value) { $('rErr').textContent = 'Die beiden Passwörter sind nicht gleich.'; return; }
+    $('rGo').disabled = true;
+    const r = await N.authRegister({ name: $('rName').value, kuerzel: $('rKurz').value, pw: $('rPw').value });
+    $('rGo').disabled = false;
+    if (!r.ok) $('rErr').textContent = r.error;
+  });
+  const pickDir = async () => { await N.chooseDataDir(); $('dir').textContent = await N.dataDir(); load(); };
+  $('dirBtn').addEventListener('click', pickDir);
+  N.onAskDataDir(pickDir);
+  N.dataDir().then((d) => { $('dir').textContent = d; });
+  load();
+})();
+</script>
+<script src="hinweise.js"></script>
+</body>
+</html>

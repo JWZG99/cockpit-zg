@@ -81,7 +81,8 @@
       return r;
     },
   };
-  const user = { can: async () => true, id: async () => 'lokal' };
+  // the logged-in person (login in the program); their private data lives under data/users/<id>
+  const user = { can: async () => true, id: async () => ((await N.me()) || {}).id || 'lokal' };
   const caps = { db, assets, downloads, user };
   window.claude = { use: async (name) => caps[name] || null };
 })();
